@@ -14,3 +14,9 @@ For best experience use a wxWidgets version >= 3.1.x e.g. specifiy your own buil
 `KERL_CONFIGURE_OPTIONS="--with-wxdir=/path/to/your/wxWidgets" kerl build git https://github.com/diodechain/otp.git letz/wxWebView 24.webview`
 
 For windows platform build instructions check-out the Erlang documentation: https://erlang.org/doc/installation_guide/INSTALL-WIN32.html
+
+## Screenshots
+
+![Linux build](/nodeploy/linux_todo.png?raw=true "Linux build")
+![Windows build](/nodeploy/windows_todo.png?raw=true "Windows build")
+![MacOS build](/nodeploy/macos_todo.png?raw=true "MacOS build")
