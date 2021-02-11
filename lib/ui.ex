@@ -31,7 +31,15 @@ defmodule UI do
        end}
     ])
 
-    icon = :wxIcon.new(Todo.resource_path("icon.png"))
+    # This simple version will not show right on MacOS:
+    # icon = :wxIcon.new(Todo.resource_path("icon.png"))
+    # This does show right though:
+    image = :wxImage.new(Todo.resource_path("icon.png"))
+    bitmap = :wxBitmap.new(image)
+    icon = :wxIcon.new()
+    :wxIcon.copyFromBitmap(icon, bitmap)
+    :wxBitmap.destroy(bitmap)
+
     :wxTopLevelWindow.setIcon(frame, icon)
     sizer = :wxBoxSizer.new(Wx.wxHORIZONTAL())
     webview = :wxWebView.new(frame, -1)
