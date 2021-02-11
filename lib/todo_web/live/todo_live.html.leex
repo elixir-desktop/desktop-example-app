@@ -1,0 +1,16 @@
+<div class="header">
+  <h2>Todos</h2>
+  <form phx-submit="add">
+    <input type="text" name="text" placeholder="Title...">
+    <button type="submit">Add</button>
+  </form>
+</div>
+
+<ul>
+  <%= for item <- @todos do %>
+  <li phx-click="toggle" phx-value-id="<%= item.id %>" class="<%= item.status %>"
+    ><%= item.text %>
+    <span class="close" phx-click="drop" phx-value-id="<%= item.id %>">&#215;</span>
+    </li>
+  <% end %>
+</ul>
