@@ -7,6 +7,7 @@ html {
 .wrap {
     margin: 2em auto;
     background-color: #FAC9B8;
+    border-radius: 5px;
     width: 500px;
     padding: 1em;
 }
@@ -36,7 +37,7 @@ button {
     font-size: 16px;
     cursor: pointer;
     transition: 0.3s;
-    border-radius: 0;
+    border: 1px solid #bbb;
 }
 
 form {
