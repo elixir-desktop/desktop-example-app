@@ -15,19 +15,6 @@ defmodule Model.Todos do
     {:ok, pid}
   end
 
-  def init(_args) do
-    File.mkdir_p!(Todo.config_dir())
-    default = Path.join(Todo.config_dir(), "database.sq3")
-    name = Todos
-    opts = [name: name, db_timeout: 30_000, stmt_cache_size: 50]
-
-    children = [
-      %{start: {Sqlitex.Server, :start_link, [to_charlist(default), opts]}, id: name}
-    ]
-
-    Supervisor.init(children, strategy: :one_for_one)
-  end
-
   @topic "todos"
   def toggle_todo(id) do
     todo = Enum.find(all_todos(), fn todo -> todo.id == id end)
@@ -64,5 +51,18 @@ defmodule Model.Todos do
   defp query!(sql, params \\ []) do
     {:ok, ret} = Sqlitex.Server.query(Todos, sql, bind: params)
     ret
+  end
+
+  def init(_args) do
+    File.mkdir_p!(Todo.config_dir())
+    default = Path.join(Todo.config_dir(), "database.sq3")
+    name = Todos
+    opts = [name: name, db_timeout: 30_000, stmt_cache_size: 50]
+
+    children = [
+      %{start: {Sqlitex.Server, :start_link, [to_charlist(default), opts]}, id: name}
+    ]
+
+    Supervisor.init(children, strategy: :one_for_one)
   end
 end

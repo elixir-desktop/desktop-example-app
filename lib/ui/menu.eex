@@ -1,13 +1,13 @@
 <menu>
-  <item onclick="edit">Open</item>
-  <hr/>
-  <%= for item <- @todos do %>
-  <item 
-      type="checkbox" 
-      <%= if item.status == "done" do %>checked="checked"<% end %>
-      onclick="toggle:<%= item.id %>"
-      ><%= item.text %></item>
-  <% end %>
-  <hr/>
-  <item onclick="quit">Quit</item>
+    <item onclick="edit">Open</item>
+    <hr/>
+    <%= for item <- @todos do %>
+    <item 
+        type="checkbox" 
+        <%= if item.status == "done" do %>checked="checked"<% end %>
+        onclick="toggle:<%= item.id %>"
+        ><%= item.text %></item>
+    <% end %>
+    <hr/>
+    <item onclick="quit">Quit</item>
 </menu>

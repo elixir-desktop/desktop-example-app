@@ -1,0 +1,16 @@
+<menubar>
+    <menu label="File">
+        <%= for item <- @todos do %>
+        <item 
+            type="checkbox" 
+            <%= if item.status == "done" do %>checked="checked"<% end %>
+            onclick="toggle:<%= item.id %>"
+            ><%= item.text %></item>
+        <% end %>
+        <hr/>
+        <item onclick="quit">Quit</item>
+    </menu>
+    <menu label="Help">
+        <item onclick="about">About</item>
+    </menu>
+</menubar>

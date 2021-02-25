@@ -21,7 +21,7 @@ defmodule Todo.MixProject do
   def application do
     [
       mod: {Todo, []},
-      extra_applications: [:logger, :wx, :ssl, :crypto, :sasl, :tools, :inets, :eex]
+      extra_applications: [:logger, :ssl, :crypto, :sasl, :tools, :inets]
     ]
   end
 
@@ -29,17 +29,7 @@ defmodule Todo.MixProject do
   defp deps do
     [
       {:sqlitex, github: "diodechain/sqlitex"},
-      {:erlsom, "~> 1.5"},
-
-      # phoenix stuff
-      {:phoenix, "~> 1.5.7"},
-      {:phoenix_live_view, "~> 0.15"},
-      {:phoenix_html, "~> 2.11"},
-      {:phoenix_live_reload, "~> 1.2", only: :dev},
-      {:gettext, "~> 0.11"},
-      {:plug_cowboy, "~> 2.0"},
-      {:plug_crypto, github: "elixir-plug/plug_crypto", override: true},
-      {:jason, "~> 1.0"}
+      {:desktop, github: "dominicletz/desktop"}
     ]
   end
 end

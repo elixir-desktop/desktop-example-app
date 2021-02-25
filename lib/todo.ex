@@ -3,7 +3,7 @@ defmodule Todo do
   require Logger
 
   def config_dir() do
-    Path.join([OS.home(), ".config", "todo"])
+    Path.join([Desktop.OS.home(), ".config", "todo"])
   end
 
   @app Mix.Project.config()[:app]
@@ -12,7 +12,21 @@ defmodule Todo do
   end
 
   def start(:normal, []) do
-    children = [Model.Todos, TodoWeb.Sup, UI.Menu, UI]
+    window = {
+      Desktop.Window,
+      [
+        app: @app,
+        id: TodoWindow,
+        title: "Todos",
+        size: {600, 500},
+        icon: "icon.png",
+        menubar: UI.MenuBar,
+        icon_menu: UI.Menu,
+        url: fn -> TodoWeb.Router.Helpers.live_url(TodoWeb.Endpoint, TodoWeb.TodoLive) end
+      ]
+    }
+
+    children = [Model.Todos, TodoWeb.Sup, window]
     Supervisor.start_link(children, name: __MODULE__, strategy: :one_for_one)
   end
 

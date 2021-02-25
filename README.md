@@ -5,13 +5,10 @@ This application is an example of an Elixir live view based desktop application.
 ## General notes
 
 To run this app you need a most recent Erlang build and at least Elixir 1.10.4.
-At the time of writing the required :wxWebView component is not yet pulled into Erlang OTP master https://github.com/erlang/otp/pull/3027
-
-You can still preview with :wxWebView support by build the pull requested branch. E.g. using kerl:
-`kerl build git https://github.com/diodechain/otp.git letz/wxWebView 24.webview`
+At the time of writing the required :wxWebView component is not yet pulled into Erlang OTP 24 RC1  https://www.erlang.org/news/144
 
 For best experience use a wxWidgets version >= 3.1.x e.g. specifiy your own built version:
-`KERL_CONFIGURE_OPTIONS="--with-wxdir=/path/to/your/wxWidgets" kerl build git https://github.com/diodechain/otp.git letz/wxWebView 24.webview`
+`KERL_CONFIGURE_OPTIONS="--with-wxdir=/path/to/your/wxWidgets" kerl build git https://github.com/erlang/otp.git OTP-24.0-rc1 24.rc1`
 
 For windows platform build instructions check-out the Erlang documentation: https://erlang.org/doc/installation_guide/INSTALL-WIN32.html
 

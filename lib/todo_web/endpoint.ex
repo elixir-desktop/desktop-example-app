@@ -1,10 +1,5 @@
 defmodule TodoWeb.Endpoint do
-  def url do
-    url = Phoenix.Config.cache(__MODULE__, :__phoenix_url__, &Phoenix.Endpoint.Supervisor.url/1)
-    String.replace(url, ":0", ":#{:ranch.get_port(TodoWeb.Endpoint.HTTP)}")
-  end
-
-  use Phoenix.Endpoint, otp_app: :todo
+  use Desktop.Endpoint, otp_app: :todo
 
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
@@ -46,6 +41,6 @@ defmodule TodoWeb.Endpoint do
   plug Plug.Head
 
   plug Plug.Session, @session_options
-  plug TodoWeb.Auth
+  plug Desktop.Auth
   plug TodoWeb.Router
 end

@@ -22,7 +22,11 @@ defmodule TodoWeb.TodoLive do
 
   def handle_event("add", %{"text" => text}, socket) do
     Model.Todos.add_todo(text, "todo")
-    UI.show_notification("Added todo: #{text}")
+
+    Desktop.Window.show_notification(TodoWindow, "Added todo: #{text}",
+      callback: &notification_event/1
+    )
+
     {:noreply, socket}
   end
 
@@ -36,5 +40,12 @@ defmodule TodoWeb.TodoLive do
     id = String.to_integer(id)
     Model.Todos.drop_todo(id)
     {:noreply, socket}
+  end
+
+  def notification_event(action) do
+    Desktop.Window.show_notification(TodoWindow, "You did '#{inspect(action)}' me!",
+      id: :click,
+      type: :warning
+    )
   end
 end
