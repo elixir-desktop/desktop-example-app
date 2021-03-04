@@ -30,6 +30,7 @@ defmodule Todo.MixProject do
     [
       {:sqlitex, github: "diodechain/sqlitex"},
       {:desktop, github: "dominicletz/desktop"}
+      # {:desktop, path: "../desktop"}
     ]
   end
 end
