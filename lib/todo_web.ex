@@ -27,16 +27,6 @@ defmodule TodoWeb do
     end
   end
 
-  def remote_controller do
-    quote do
-      use Phoenix.Controller, namespace: TodoWeb
-
-      import Plug.Conn
-      import TodoWeb.Gettext
-      alias TodoWeb.RemoteRouter.Helpers, as: Routes
-    end
-  end
-
   def view do
     quote do
       use Phoenix.View,
@@ -69,41 +59,6 @@ defmodule TodoWeb do
 
       unquote(view_helpers())
       alias TodoWeb.Router.Helpers, as: Routes
-    end
-  end
-
-  def remote_view do
-    quote do
-      use Phoenix.View,
-        root: "lib/todo_web/templates",
-        namespace: TodoWeb
-
-      # Import convenience functions from controllers
-      import Phoenix.Controller,
-        only: [get_flash: 1, get_flash: 2, view_module: 1, view_template: 1]
-
-      # Include shared imports and aliases for views
-      unquote(view_helpers())
-      alias TodoWeb.RemoteRouter.Helpers, as: Routes
-    end
-  end
-
-  def remote_live_view do
-    quote do
-      use Phoenix.LiveView,
-        layout: {TodoWeb.LayoutView, "live.html"}
-
-      unquote(view_helpers())
-      alias TodoWeb.RemoteRouter.Helpers, as: Routes
-    end
-  end
-
-  def remote_live_component do
-    quote do
-      use Phoenix.LiveComponent
-
-      unquote(view_helpers())
-      alias TodoWeb.RemoteRouter.Helpers, as: Routes
     end
   end
 
