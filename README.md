@@ -1,4 +1,4 @@
-# Todos Sample App
+# TodoApp Sample App
 
 This application is an example of an Elixir live view based desktop application. It uses :wxWebView, :wxNotification and :wxTaskbarIcon to create a native & modern look and feel.
 

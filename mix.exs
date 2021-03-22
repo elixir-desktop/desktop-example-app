@@ -3,7 +3,7 @@ defmodule Todo.MixProject do
 
   def project do
     [
-      app: :todo,
+      app: :todo_app,
       version: "0.0.1",
       elixir: "~> 1.10",
       elixirc_paths: elixirc_paths(Mix.env()),
@@ -20,7 +20,7 @@ defmodule Todo.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      mod: {Todo, []},
+      mod: {TodoApp, []},
       extra_applications: [:logger, :ssl, :crypto, :sasl, :tools, :inets]
     ]
   end
@@ -28,7 +28,9 @@ defmodule Todo.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:sqlitex, github: "diodechain/sqlitex"},
+      {:ecto, "~> 3.5"},
+      {:ecto_sql, "~> 3.5"},
+      {:ecto_sqlite3, "~> 0.5.2"},
       {:desktop, github: "dominicletz/desktop"}
       # {:desktop, path: "../desktop"}
     ]

@@ -4,14 +4,14 @@ defmodule TodoWeb.TodoLive do
   @impl true
 
   def mount(_args, _session, socket) do
-    todos = Model.Todos.all_todos()
-    Model.Todos.subscribe()
+    todos = TodoApp.Todo.all_todos()
+    TodoApp.Todo.subscribe()
     {:ok, assign(socket, todos: todos)}
   end
 
   @impl true
   def handle_info(:changed, socket) do
-    todos = Model.Todos.all_todos()
+    todos = TodoApp.Todo.all_todos()
     {:noreply, assign(socket, todos: todos)}
   end
 
@@ -21,7 +21,7 @@ defmodule TodoWeb.TodoLive do
   end
 
   def handle_event("add", %{"text" => text}, socket) do
-    Model.Todos.add_todo(text, "todo")
+    TodoApp.Todo.add_todo(text, "todo")
 
     Desktop.Window.show_notification(TodoWindow, "Added todo: #{text}",
       callback: &notification_event/1
@@ -32,13 +32,13 @@ defmodule TodoWeb.TodoLive do
 
   def handle_event("toggle", %{"id" => id}, socket) do
     id = String.to_integer(id)
-    Model.Todos.toggle_todo(id)
+    TodoApp.Todo.toggle_todo(id)
     {:noreply, socket}
   end
 
   def handle_event("drop", %{"id" => id}, socket) do
     id = String.to_integer(id)
-    Model.Todos.drop_todo(id)
+    TodoApp.Todo.drop_todo(id)
     {:noreply, socket}
   end
 

@@ -1,5 +1,5 @@
 defmodule TodoWeb.Endpoint do
-  use Desktop.Endpoint, otp_app: :todo
+  use Desktop.Endpoint, otp_app: :todo_app
 
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
@@ -18,7 +18,7 @@ defmodule TodoWeb.Endpoint do
 
   plug Plug.Static,
     at: "/",
-    from: :todo,
+    from: :todo_app,
     gzip: false,
     only: ~w(css fonts images js favicon.ico robots.txt)
 

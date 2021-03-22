@@ -7,7 +7,7 @@ defmodule TodoWeb.Sup do
 
   def init([]) do
     children = [
-      {Phoenix.PubSub, name: Todo.PubSub},
+      {Phoenix.PubSub, name: TodoApp.PubSub},
       TodoWeb.Endpoint
     ]
 

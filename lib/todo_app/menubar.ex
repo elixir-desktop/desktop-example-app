@@ -1,12 +1,12 @@
-defmodule UI.MenuBar do
+defmodule TodoApp.MenuBar do
   use Desktop.Menu
-  alias Model.Todos
+  alias TodoApp.Todo
   alias Desktop.Window
 
   def handle_event(command, menu) do
     case command do
       <<"toggle:", id::binary>> ->
-        Todos.toggle_todo(String.to_integer(id))
+        Todo.toggle_todo(String.to_integer(id))
 
       <<"about">> ->
         Window.show_notification(TodoWindow, "Sample Elixir Desktop App!",
@@ -21,11 +21,11 @@ defmodule UI.MenuBar do
   end
 
   def mount(menu) do
-    Model.Todos.subscribe()
-    {:ok, assign(menu, todos: Todos.all_todos())}
+    TodoApp.Todo.subscribe()
+    {:ok, assign(menu, todos: Todo.all_todos())}
   end
 
   def handle_info(:changed, menu) do
-    {:noreply, assign(menu, todos: Todos.all_todos())}
+    {:noreply, assign(menu, todos: Todo.all_todos())}
   end
 end
