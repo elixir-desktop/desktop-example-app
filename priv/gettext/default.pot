@@ -1,0 +1,51 @@
+## This file is a PO Template file.
+##
+## "msgid"s here are often extracted from source code.
+## Add new translations manually only if they're dynamic
+## translations that can't be statically extracted.
+##
+## Run "mix gettext.extract" to bring this file up to
+## date. Leave "msgstr"s empty as changing them here as no
+## effect: edit them in PO (.po) files instead.
+msgid ""
+msgstr ""
+
+#, elixir-format
+#: lib/todo_web/live/todo_live.html.leex:4
+msgid "Title..."
+msgstr ""
+
+#, elixir-format
+#: lib/todo_web/live/todo_live.html.leex:2
+msgid "TodoApp"
+msgstr ""
+
+#, elixir-format
+#: lib/todo_app/menubar.eex:14
+msgid "About"
+msgstr ""
+
+#, elixir-format
+#: lib/todo_app/menubar.eex:2
+msgid "File"
+msgstr ""
+
+#, elixir-format
+#: lib/todo_app/menubar.eex:13
+msgid "Help"
+msgstr ""
+
+#, elixir-format
+#: lib/todo_app/menu.eex:2
+msgid "Open"
+msgstr ""
+
+#, elixir-format
+#: lib/todo_app/menu.eex:12 lib/todo_app/menubar.eex:11
+msgid "Quit"
+msgstr ""
+
+#, elixir-format
+#: lib/todo_app/menubar.ex:13
+msgid "Sample Elixir Desktop App!"
+msgstr ""

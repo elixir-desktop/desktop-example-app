@@ -1,5 +1,5 @@
 <menubar>
-    <menu label="File">
+    <menu label="<%= gettext "File" %>">
         <%= for item <- @todos do %>
         <item 
             type="checkbox" 
@@ -8,9 +8,9 @@
             ><%= item.text %></item>
         <% end %>
         <hr/>
-        <item onclick="quit">Quit</item>
+        <item onclick="quit"><%= gettext "Quit" %></item>
     </menu>
-    <menu label="Help">
-        <item onclick="about">About</item>
+    <menu label="<%= gettext "Help" %>">
+        <item onclick="about"><%= gettext "About" %></item>
     </menu>
 </menubar>

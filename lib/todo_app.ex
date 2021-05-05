@@ -14,6 +14,8 @@ defmodule TodoApp do
   def start(:normal, []) do
     File.mkdir_p!(config_dir())
 
+    Desktop.identify_default_locale(TodoWeb.Gettext)
+
     Application.put_env(:todo_app, TodoApp.Repo,
       database: Path.join(config_dir(), "/database.sq3")
     )

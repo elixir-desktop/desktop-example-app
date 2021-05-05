@@ -1,4 +1,5 @@
 defmodule TodoApp.Menu do
+  import TodoWeb.Gettext
   use Desktop.Menu
 
   def handle_event(command, menu) do

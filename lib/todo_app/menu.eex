@@ -1,5 +1,5 @@
 <menu>
-    <item onclick="edit">Open</item>
+    <item onclick="edit"><%= gettext "Open" %></item>
     <hr/>
     <%= for item <- @todos do %>
     <item 
@@ -9,5 +9,5 @@
         ><%= item.text %></item>
     <% end %>
     <hr/>
-    <item onclick="quit">Quit</item>
+    <item onclick="quit"><%= gettext "Quit" %></item>
 </menu>

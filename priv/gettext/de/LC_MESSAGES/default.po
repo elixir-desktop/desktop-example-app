@@ -1,0 +1,52 @@
+## "msgid"s in this file come from POT (.pot) files.
+##
+## Do not add, change, or remove "msgid"s manually here as
+## they're tied to the ones in the corresponding POT file
+## (with the same domain).
+##
+## Use "mix gettext.extract --merge" or "mix gettext.merge"
+## to merge POT files into PO files.
+msgid ""
+msgstr ""
+"Language: de\n"
+"Plural-Forms: nplurals=2\n"
+
+#, elixir-format
+#: lib/todo_web/live/todo_live.html.leex:4
+msgid "Title..."
+msgstr "Titel"
+
+#, elixir-format
+#: lib/todo_web/live/todo_live.html.leex:2
+msgid "TodoApp"
+msgstr "Die TodoApp"
+
+#, elixir-format
+#: lib/todo_app/menubar.eex:14
+msgid "About"
+msgstr "Über"
+
+#, elixir-format
+#: lib/todo_app/menubar.eex:2
+msgid "File"
+msgstr "Datei"
+
+#, elixir-format
+#: lib/todo_app/menubar.eex:13
+msgid "Help"
+msgstr "Hilfe"
+
+#, elixir-format
+#: lib/todo_app/menu.eex:2
+msgid "Open"
+msgstr "Öffnen"
+
+#, elixir-format
+#: lib/todo_app/menu.eex:12 lib/todo_app/menubar.eex:11
+msgid "Quit"
+msgstr "Quit"
+
+#, elixir-format
+#: lib/todo_app/menubar.ex:13
+msgid "Sample Elixir Desktop App!"
+msgstr "Beispiel Elixir Desktop Anwendung!"

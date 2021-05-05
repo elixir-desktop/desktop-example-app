@@ -1,7 +1,7 @@
 <div class="header">
-  <h2>TodoApp</h2>
+  <h2><%= gettext "TodoApp" %></h2>
   <form phx-submit="add">
-    <input type="text" name="text" placeholder="Title...">
+    <input type="text" name="text" placeholder="<%= gettext "Title..." %>">
     <button type="submit">&#8617;</button>
   </form>
 </div>

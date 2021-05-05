@@ -6,7 +6,7 @@ config :logger,
   backends: [:console]
 
 config :logger, :console,
-  level: :info,
+  level: :notice,
   format: "$time $metadata[$level] $levelpad$message\n",
   metadata: [:request_id]
 

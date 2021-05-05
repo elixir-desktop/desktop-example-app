@@ -1,4 +1,5 @@
 defmodule TodoApp.MenuBar do
+  import TodoWeb.Gettext
   use Desktop.Menu
   alias TodoApp.Todo
   alias Desktop.Window
@@ -9,7 +10,7 @@ defmodule TodoApp.MenuBar do
         Todo.toggle_todo(String.to_integer(id))
 
       <<"about">> ->
-        Window.show_notification(TodoWindow, "Sample Elixir Desktop App!",
+        Window.show_notification(TodoWindow, gettext("Sample Elixir Desktop App!"),
           callback: &TodoWeb.TodoLive.notification_event/1
         )
 
