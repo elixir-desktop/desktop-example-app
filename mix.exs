@@ -31,7 +31,7 @@ defmodule Todo.MixProject do
       {:ecto, "~> 3.5"},
       {:ecto_sql, "~> 3.5"},
       {:ecto_sqlite3, "~> 0.5.2"},
-      {:desktop, github: "dominicletz/desktop"}
+      {:desktop, github: "elixir-desktop/desktop"}
       # {:desktop, path: "../desktop"}
     ]
   end
