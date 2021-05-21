@@ -19,7 +19,7 @@ msgstr "Titel"
 #, elixir-format
 #: lib/todo_web/live/todo_live.html.leex:2
 msgid "TodoApp"
-msgstr "Die TodoApp"
+msgstr "AufgabenApp"
 
 #, elixir-format
 #: lib/todo_app/menubar.eex:14
@@ -27,7 +27,7 @@ msgid "About"
 msgstr "Über"
 
 #, elixir-format
-#: lib/todo_app/menubar.eex:2
+#: lib/todo_app/menubar.eex:2 lib/todo_app/menubar.ex:10
 msgid "File"
 msgstr "Datei"
 
@@ -43,10 +43,36 @@ msgstr "Öffnen"
 
 #, elixir-format
 #: lib/todo_app/menu.eex:12 lib/todo_app/menubar.eex:11
+#: lib/todo_app/menubar.ex:18
 msgid "Quit"
 msgstr "Quit"
 
 #, elixir-format
-#: lib/todo_app/menubar.ex:13
+#: lib/todo_app/menubar.ex:51
 msgid "Sample Elixir Desktop App!"
 msgstr "Beispiel Elixir Desktop Anwendung!"
+
+#, elixir-format
+#: lib/todo_app/menubar.ex:20
+msgid "Extra"
+msgstr "Extras"
+
+#, elixir-format
+#: lib/todo_app/menubar.ex:23
+msgid "Open Browser"
+msgstr "Öffne einen Browser"
+
+#, elixir-format
+#: lib/todo_app/menubar.ex:21
+msgid "Show Notification"
+msgstr "Zeige eine Benachrichtigung"
+
+#, elixir-format
+#: lib/todo_app/menubar.ex:22
+msgid "Show Observer"
+msgstr "Zeige den Observer"
+
+#, elixir-format
+#: lib/todo_web/templates/layout/root.html.leex:8
+msgid " · Your Todos"
+msgstr " · Deine Aufgaben"

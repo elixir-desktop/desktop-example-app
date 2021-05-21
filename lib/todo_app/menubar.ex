@@ -4,19 +4,53 @@ defmodule TodoApp.MenuBar do
   alias TodoApp.Todo
   alias Desktop.Window
 
-  def handle_event(command, menu) do
-    case command do
-      <<"toggle:", id::binary>> ->
-        Todo.toggle_todo(String.to_integer(id))
+  def render(assigns) do
+    ~E"""
+    <menubar>
+    <menu label="<%= gettext "File" %>">
+        <%= for item <- @todos do %>
+        <item
+            type="checkbox" onclick="toggle:<%= item.id %>"
+            <%= if item.status == "done" do %>checked="checked"<% end %>
+            ><%= item.text %></item>
+        <% end %>
+        <hr/>
+        <item onclick="quit"><%= gettext "Quit" %></item>
+    </menu>
+    <menu label="<%= gettext "Extra" %>">
+        <item onclick="notification"><%= gettext "Show Notification" %></item>
+        <item onclick="observer"><%= gettext "Show Observer" %></item>
+        <item onclick="browser"><%= gettext "Open Browser" %></item>
+    </menu>
+    </menubar>
+    """
+  end
 
-      <<"about">> ->
-        Window.show_notification(TodoWindow, gettext("Sample Elixir Desktop App!"),
-          callback: &TodoWeb.TodoLive.notification_event/1
-        )
+  def handle_event(<<"toggle:", id::binary>>, menu) do
+    Todo.toggle_todo(String.to_integer(id))
+    {:noreply, menu}
+  end
 
-      <<"quit">> ->
-        Window.quit()
-    end
+  def handle_event("observer", menu) do
+    :observer.start()
+    {:noreply, menu}
+  end
+
+  def handle_event("quit", menu) do
+    Window.quit()
+    {:noreply, menu}
+  end
+
+  def handle_event("browser", menu) do
+    Window.prepare_url(TodoWeb.Endpoint.url())
+    |> :wx_misc.launchDefaultBrowser()
+    {:noreply, menu}
+  end
+
+  def handle_event("notification", menu) do
+    Window.show_notification(TodoWindow, gettext("Sample Elixir Desktop App!"),
+      callback: &TodoWeb.TodoLive.notification_event/1
+    )
 
     {:noreply, menu}
   end

@@ -21,7 +21,7 @@ defmodule Todo.MixProject do
   def application do
     [
       mod: {TodoApp, []},
-      extra_applications: [:logger, :ssl, :crypto, :sasl, :tools, :inets]
+      extra_applications: [:logger, :ssl, :crypto, :sasl, :tools, :inets, :observer]
     ]
   end
 

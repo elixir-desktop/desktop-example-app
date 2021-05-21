@@ -26,7 +26,7 @@ msgid "About"
 msgstr ""
 
 #, elixir-format
-#: lib/todo_app/menubar.eex:2
+#: lib/todo_app/menubar.eex:2 lib/todo_app/menubar.ex:10
 msgid "File"
 msgstr ""
 
@@ -42,10 +42,36 @@ msgstr ""
 
 #, elixir-format
 #: lib/todo_app/menu.eex:12 lib/todo_app/menubar.eex:11
+#: lib/todo_app/menubar.ex:18
 msgid "Quit"
 msgstr ""
 
 #, elixir-format
-#: lib/todo_app/menubar.ex:13
+#: lib/todo_app/menubar.ex:51
 msgid "Sample Elixir Desktop App!"
+msgstr ""
+
+#, elixir-format
+#: lib/todo_app/menubar.ex:20
+msgid "Extra"
+msgstr ""
+
+#, elixir-format
+#: lib/todo_app/menubar.ex:23
+msgid "Open Browser"
+msgstr ""
+
+#, elixir-format
+#: lib/todo_app/menubar.ex:21
+msgid "Show Notification"
+msgstr ""
+
+#, elixir-format
+#: lib/todo_app/menubar.ex:22
+msgid "Show Observer"
+msgstr ""
+
+#, elixir-format
+#: lib/todo_web/templates/layout/root.html.leex:8
+msgid " · Your Todos"
 msgstr ""

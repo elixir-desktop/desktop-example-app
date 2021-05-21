@@ -7,14 +7,10 @@ defmodule TodoApp do
   end
 
   @app Mix.Project.config()[:app]
-  def resource_path(filename) do
-    Path.join(:code.priv_dir(@app), filename)
-  end
 
   def start(:normal, []) do
-    File.mkdir_p!(config_dir())
-
     Desktop.identify_default_locale(TodoWeb.Gettext)
+    File.mkdir_p!(config_dir())
 
     Application.put_env(:todo_app, TodoApp.Repo,
       database: Path.join(config_dir(), "/database.sq3")
@@ -36,7 +32,7 @@ defmodule TodoApp do
           icon: "icon.png",
           menubar: TodoApp.MenuBar,
           icon_menu: TodoApp.Menu,
-          url: fn -> TodoWeb.Router.Helpers.live_url(TodoWeb.Endpoint, TodoWeb.TodoLive) end
+          url: &TodoWeb.Endpoint.url/0
         ]
       })
   end
