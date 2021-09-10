@@ -1,10 +1,11 @@
 defmodule Todo.MixProject do
   use Mix.Project
 
+  @version "0.0.1"
   def project do
     [
       app: :todo_app,
-      version: "0.0.1",
+      version: @version,
       elixir: "~> 1.10",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: [:phoenix, :gettext] ++ Mix.compilers(),
@@ -21,8 +22,16 @@ defmodule Todo.MixProject do
   def application do
     [
       mod: {TodoApp, []},
-      extra_applications: [:logger, :ssl, :crypto, :sasl, :tools, :inets, :observer]
+      extra_applications: [:logger, :ssl, :crypto, :sasl, :tools, :inets | extra()]
     ]
+  end
+
+  def extra() do
+    if System.get_env("MOBILE") do
+      []
+    else
+      [:observer]
+    end
   end
 
   # Run "mix help deps" to learn about dependencies.

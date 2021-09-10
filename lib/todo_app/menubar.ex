@@ -44,6 +44,7 @@ defmodule TodoApp.MenuBar do
   def handle_event("browser", menu) do
     Window.prepare_url(TodoWeb.Endpoint.url())
     |> :wx_misc.launchDefaultBrowser()
+
     {:noreply, menu}
   end
 
