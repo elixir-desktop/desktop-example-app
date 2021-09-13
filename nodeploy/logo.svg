@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="356.45142mm"
+   height="290.61005mm"
+   viewBox="0 0 356.45142 290.61005"
+   version="1.1"
+   id="svg8"
+   inkscape:version="0.92.3 (2405546, 2018-03-11)"
+   sodipodi:docname="logo.svg">
+  <defs
+     id="defs2">
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient1285">
+      <stop
+         style="stop-color:#000000;stop-opacity:1;"
+         offset="0"
+         id="stop1281" />
+      <stop
+         style="stop-color:#000000;stop-opacity:0;"
+         offset="1"
+         id="stop1283" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       id="linearGradient959">
+      <stop
+         style="stop-color:#61496d;stop-opacity:1"
+         offset="0"
+         id="stop955" />
+      <stop
+         style="stop-color:#8b8290;stop-opacity:1"
+         offset="1"
+         id="stop957" />
+    </linearGradient>
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient959"
+       id="linearGradient961"
+       x1="-96.229566"
+       y1="-142.44664"
+       x2="212.74158"
+       y2="-142.44664"
+       gradientUnits="userSpaceOnUse" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient959"
+       id="linearGradient972"
+       gradientUnits="userSpaceOnUse"
+       x1="-96.229566"
+       y1="-142.44664"
+       x2="212.74158"
+       y2="-142.44664"
+       gradientTransform="translate(-116.512,284.89328)" />
+    <filter
+       style="color-interpolation-filters:sRGB;"
+       inkscape:label="Drop Shadow"
+       id="filter1076">
+      <feFlood
+         flood-opacity="0.498039"
+         flood-color="rgb(0,0,0)"
+         result="flood"
+         id="feFlood1066" />
+      <feComposite
+         in="flood"
+         in2="SourceGraphic"
+         operator="in"
+         result="composite1"
+         id="feComposite1068" />
+      <feGaussianBlur
+         in="composite1"
+         stdDeviation="15.3005"
+         result="blur"
+         id="feGaussianBlur1070" />
+      <feOffset
+         dx="6"
+         dy="6"
+         result="offset"
+         id="feOffset1072" />
+      <feComposite
+         in="SourceGraphic"
+         in2="offset"
+         operator="over"
+         result="composite2"
+         id="feComposite1074" />
+    </filter>
+    <radialGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient1285"
+       id="radialGradient1289"
+       cx="366.05722"
+       cy="447.17838"
+       fx="366.05722"
+       fy="447.17838"
+       r="641.2656"
+       gradientTransform="matrix(0.15719475,0.17578107,-0.2090046,0.18690535,33.353104,-37.545587)"
+       gradientUnits="userSpaceOnUse" />
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="0.49497475"
+     inkscape:cx="868.27254"
+     inkscape:cy="734.07973"
+     inkscape:document-units="mm"
+     inkscape:current-layer="layer1"
+     showgrid="false"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:window-width="1853"
+     inkscape:window-height="1025"
+     inkscape:window-x="0"
+     inkscape:window-y="27"
+     inkscape:window-maximized="1" />
+  <metadata
+     id="metadata5">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(154.79118,-3.5283127)"
+     style="display:inline">
+    <path
+       style="display:inline;opacity:1;fill:url(#radialGradient1289);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:4.9847827;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke markers fill"
+       d="m 134.77128,17.778264 c -5.66341,0 -11.32713,2.169555 -15.66675,6.509164 L -9.6157619,153.00825 -67.900575,94.723438 c -8.679219,-8.67922 -22.653752,-8.67922 -31.332971,0 l -39.230684,39.231192 c -8.67922,8.67922 -8.67922,22.65324 0,31.33246 l 73.944326,73.94483 c 0.0021,0.002 0.0045,0.004 0.0067,0.007 l 37.415287,37.41529 c 8.679219,8.67922 22.6537513,8.67922 31.3329709,0 L 43.466269,237.42273 187.85331,93.036203 c 8.67923,-8.67922 8.67923,-22.653754 0,-31.332971 L 150.43752,24.287428 c -4.33961,-4.339609 -10.00281,-6.509164 -15.66624,-6.509164 z"
+       id="rect896-9-9"
+       inkscape:connector-curvature="0"
+       inkscape:label="background" />
+    <rect
+       style="display:inline;opacity:1;fill:#421658;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:4.9847827;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke markers fill"
+       id="rect896-9"
+       width="201.80766"
+       height="99.792564"
+       x="-191.05913"
+       y="-210.24918"
+       ry="22.15572"
+       transform="rotate(-135)"
+       inkscape:label="right"
+       sodipodi:insensitive="true" />
+    <rect
+       style="display:inline;opacity:1;fill:url(#linearGradient972);fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:4.9847827;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke markers fill"
+       id="rect896"
+       width="303.98636"
+       height="97.224976"
+       x="-210.24919"
+       y="93.834152"
+       ry="22.15572"
+       transform="rotate(-45)"
+       inkscape:label="left"
+       sodipodi:insensitive="true" />
+  </g>
+</svg>
