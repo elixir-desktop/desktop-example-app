@@ -22,16 +22,23 @@ defmodule Todo.MixProject do
   def application do
     [
       mod: {TodoApp, []},
-      extra_applications: [:logger, :ssl, :crypto, :sasl, :tools, :inets | extra()]
+      extra_applications: [
+        :logger,
+        :ssl,
+        :crypto,
+        :sasl,
+        :tools,
+        :inets | extra_applications(Mix.target())
+      ]
     ]
   end
 
-  def extra() do
-    if System.get_env("MOBILE") do
-      []
-    else
-      [:observer]
-    end
+  def extra_applications(:host) do
+    [:observer]
+  end
+
+  def extra_applications(_mobile) do
+    []
   end
 
   # Run "mix help deps" to learn about dependencies.
@@ -40,6 +47,7 @@ defmodule Todo.MixProject do
       {:ecto, "~> 3.5"},
       {:ecto_sql, "~> 3.5"},
       {:ecto_sqlite3, "~> 0.5.2"},
+      {:exqlite, github: "elixir-desktop/exqlite", override: true, targets: :android},
       {:desktop, github: "elixir-desktop/desktop"}
       # {:desktop, path: "../desktop"}
     ]
