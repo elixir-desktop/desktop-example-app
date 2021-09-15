@@ -1,4 +1,15 @@
 defmodule TodoApp do
+  @moduledoc """
+    TodoApp Application. This module takes care of the the boot.
+    Because the TodoApp is a standalone desktop application there is
+    initial Database initialization needed when the SQlite database is
+    not yet existing. This is done during start() by
+    calling `TodoApp.Repo.initialize()`.
+
+    Other than that this module initialized the main `Desktop.Window`
+    and configures it to create a taskbar icon as well.
+
+  """
   use Application
   require Logger
 

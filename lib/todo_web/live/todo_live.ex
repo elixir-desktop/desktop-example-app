@@ -1,4 +1,8 @@
 defmodule TodoWeb.TodoLive do
+  @moduledoc """
+    Main live view of our TodoApp. Just allows adding, removing and checking off
+    todo items
+  """
   use TodoWeb, :live_view
 
   @impl true

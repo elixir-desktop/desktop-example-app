@@ -1,9 +1,11 @@
 defmodule TodoApp.Todo do
+  @moduledoc """
+    Repo for our TodoApp. Minimal data structure for a todo item.
+  """
   use Ecto.Schema
   alias TodoApp.Repo
   alias __MODULE__
   import Ecto.Changeset
-
   import Ecto.Query, only: [order_by: 2]
 
   schema "todos" do

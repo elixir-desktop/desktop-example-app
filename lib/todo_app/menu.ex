@@ -1,4 +1,7 @@
 defmodule TodoApp.Menu do
+  @moduledoc """
+    Menu that is shown when a user click on the taskbar icon of the TodoApp
+  """
   import TodoWeb.Gettext
   use Desktop.Menu
 

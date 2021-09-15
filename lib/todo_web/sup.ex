@@ -1,6 +1,10 @@
 defmodule TodoWeb.Sup do
   use Supervisor
 
+  @moduledoc """
+    Supervisor for the WebApp
+  """
+
   def start_link([]) do
     Supervisor.start_link(__MODULE__, [], name: __MODULE__)
   end
