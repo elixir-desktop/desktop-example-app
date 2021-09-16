@@ -5,22 +5,21 @@ html {
 }
 
 .wrap {
-    margin: 2em auto;
-    background-color: #FAC9B8;
-    border-radius: 5px;
+    margin: 0 auto;
     max-width: 500px;
     padding: 1em;
 }
 
 h2 {
-    text-align: center;
+    text-align: left;
+    color: white;
 }
 
 input {
     flex-grow: 1;
     margin: 0;
     border: none;
-    border-radius: 0;
+    border-radius: 5px;
     width: 75%;
     padding: 10px;
     float: left;
@@ -30,6 +29,7 @@ input {
 button {
     padding: 10px;
     width: 25%;
+    border-radius: 5px;
     background: #d9d9d9;
     color: #555;
     float: left;
@@ -38,6 +38,7 @@ button {
     cursor: pointer;
     transition: 0.3s;
     border: 1px solid #bbb;
+    margin: 0 0 0 0.2em;
 }
 
 form {
@@ -59,11 +60,11 @@ li {
     font-size: 18px;
     transition: 0.2s;
     user-select: none;
+    border-radius: 5px;
+    background: #f9f9f9;
+    margin: 0.3em 0;
     &.done {
         text-decoration: line-through;
-    }
-    &:nth-child(odd) {
-        background: #f9f9f9;
     }
     &:hover {
         background: #ddd;
@@ -71,7 +72,7 @@ li {
     &.done::before {
         content: '';
         position: absolute;
-        border-color: #fff;
+        border-color: green;
         border-style: solid;
         border-width: 0 2px 2px 0;
         top: 10px;
