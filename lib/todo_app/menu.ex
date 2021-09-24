@@ -7,14 +7,9 @@ defmodule TodoApp.Menu do
 
   def handle_event(command, menu) do
     case command do
-      <<"toggle:", id::binary>> ->
-        TodoApp.Todo.toggle_todo(String.to_integer(id))
-
-      <<"quit">> ->
-        Desktop.Window.quit()
-
-      <<"edit">> ->
-        Desktop.Window.show(TodoWindow)
+      <<"toggle:", id::binary>> -> TodoApp.Todo.toggle_todo(String.to_integer(id))
+      <<"quit">> -> Desktop.Window.quit()
+      <<"edit">> -> Desktop.Window.show(TodoWindow)
     end
 
     {:noreply, menu}
