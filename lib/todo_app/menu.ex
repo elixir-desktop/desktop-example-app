@@ -7,9 +7,14 @@ defmodule TodoApp.Menu do
 
   def handle_event(command, menu) do
     case command do
-      <<"toggle:", id::binary>> -> TodoApp.Todo.toggle_todo(String.to_integer(id))
-      <<"quit">> -> Desktop.Window.quit()
-      <<"edit">> -> Desktop.Window.show(TodoWindow)
+      <<"toggle:", id::binary>> ->
+        TodoApp.Todo.toggle_todo(String.to_integer(id))
+
+      <<"quit">> ->
+        Desktop.Window.quit()
+
+      <<"edit">> ->
+        Desktop.Window.show(TodoWindow)
     end
 
     {:noreply, menu}
@@ -21,6 +26,14 @@ defmodule TodoApp.Menu do
   end
 
   def handle_info(:changed, menu) do
-    {:noreply, assign(menu, todos: TodoApp.Todo.all_todos())}
+    menu = assign(menu, todos: TodoApp.Todo.all_todos())
+
+    if Enum.all?(menu.assigns.todos, &(Map.get(&1, :status) == "done")) do
+      Menu.set_icon(menu, "icon32x32-done.png")
+    else
+      Menu.set_icon(menu, "icon32x32.png")
+    end
+
+    {:noreply, menu}
   end
 end
