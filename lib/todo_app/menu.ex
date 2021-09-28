@@ -23,12 +23,28 @@ defmodule TodoApp.Menu do
   def handle_info(:changed, menu) do
     menu = assign(menu, todos: TodoApp.Todo.all_todos())
 
-    if Enum.all?(menu.assigns.todos, &(Map.get(&1, :status) == "done")) do
-      Menu.set_icon(menu, "icon32x32-done.png")
-    else
-      Menu.set_icon(menu, "icon32x32.png")
-    end
+    set_state_icon(menu)
 
     {:noreply, menu}
+  end
+
+  defp set_state_icon(menu) do
+    if checked?(menu.assigns.todos) do
+      Menu.set_icon(menu, {:file, "icon32x32-done.png"})
+    else
+      Menu.set_icon(menu, {:file, "icon32x32.png"})
+    end
+  end
+
+  defp checked?([]) do
+    true
+  end
+
+  defp checked?([%{status: "done"} | todos]) do
+    checked?(todos)
+  end
+
+  defp checked?([%{status: _} | todos]) do
+    false && checked?(todos)
   end
 end
