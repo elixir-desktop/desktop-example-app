@@ -17,7 +17,9 @@ defmodule TodoApp.Menu do
 
   def mount(menu) do
     TodoApp.Todo.subscribe()
-    {:ok, assign(menu, todos: TodoApp.Todo.all_todos())}
+    menu = assign(menu, todos: TodoApp.Todo.all_todos())
+    set_state_icon(menu)
+    {:ok, menu}
   end
 
   def handle_info(:changed, menu) do
@@ -29,7 +31,7 @@ defmodule TodoApp.Menu do
   end
 
   defp set_state_icon(menu) do
-    if checked?(menu.assigns.todos) do
+    if checked?(menu.todos) do
       Menu.set_icon(menu, {:file, "icon32x32-done.png"})
     else
       Menu.set_icon(menu, {:file, "icon32x32.png"})
