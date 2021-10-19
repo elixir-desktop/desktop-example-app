@@ -40,7 +40,7 @@ defmodule TodoApp do
           id: TodoWindow,
           title: "TodoApp",
           size: {600, 500},
-          icon: "icon32x32.png",
+          icon: "icon.png",
           menubar: TodoApp.MenuBar,
           icon_menu: TodoApp.Menu,
           url: &TodoWeb.Endpoint.url/0
