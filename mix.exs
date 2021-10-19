@@ -57,7 +57,7 @@ defmodule Todo.MixProject do
   defp deps do
     [
       {:ecto_sqlite3, "~> 0.7"},
-      {:desktop, "~> 1.2"},
+      {:desktop, "~> 1.3"},
       # {:desktop, path: "../desktop"},
 
       # Phoenix
