@@ -1,7 +1,6 @@
 /priv/*.so*
 /priv/*.dylib*
-/priv/static/assets/app*
-/priv/static/cache_manifest.json
+/priv/static/*
 *.log
 *.zip
 *.gz

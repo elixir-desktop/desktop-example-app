@@ -2,21 +2,102 @@ name: "CI"
 on: ["push", "pull_request"]
 
 jobs:
-  test_and_build:
-    name: "Build mix release"
-    runs-on: "ubuntu-latest"
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
     steps:
+    # Install general deps
+    - name: "Install msys2"
+      uses: msys2/setup-msys2@v2
+      with:
+          install: pacman-mirrors pkg-config base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-go upx mingw-w64-x86_64-dlfcn unzip
+          update: false
+
+    - run: choco install erlang
+      shell: powershell
+
     - run: |
-        wget https://packages.erlang-solutions.com/erlang-solutions_2.0_all.deb && sudo dpkg -i erlang-solutions_2.0_all.deb
-        sudo apt-get update
-        sudo apt-get install --allow-downgrades esl-erlang=1:24.3.3-1 inotify-tools
         mkdir $HOME/elixir && cd $HOME/elixir
         wget https://github.com/elixir-lang/elixir/releases/download/v1.11.4/Precompiled.zip
         unzip Precompiled.zip
         echo "$HOME/elixir/bin" >> $GITHUB_PATH
+
     - uses: actions/checkout@v1
     - run: |
         mix local.hex --force
         mix local.rebar --force
         mix deps.get
         mix lint
+
+    - run: MIX_ENV=prod mix release
+
+    - name: Archive Installer
+      uses: actions/upload-artifact@v2
+      with:
+        name: Windows-Installer
+        path: _build/prod/*.exe
+
+  linux:
+    runs-on: ubuntu-latest
+    steps:
+    # Install general deps
+    - name: "Installing Erlang"
+      run: |
+        wget https://packages.erlang-solutions.com/erlang-solutions_2.0_all.deb && sudo dpkg -i erlang-solutions_2.0_all.deb
+
+    - run: |
+        mkdir $HOME/elixir && cd $HOME/elixir
+        wget https://github.com/elixir-lang/elixir/releases/download/v1.11.4/Precompiled.zip
+        unzip Precompiled.zip
+        echo "$HOME/elixir/bin" >> $GITHUB_PATH
+
+    - uses: actions/checkout@v1
+    - run: |
+        mix local.hex --force
+        mix local.rebar --force
+        mix deps.get
+        mix lint
+
+    - run: MIX_ENV=prod mix release
+
+    - name: Archive Linux Installer
+      uses: actions/upload-artifact@v2
+      with:
+        name: Linux-Installer
+        path: _build/prod/*.run
+    # - name: Linux Release
+    #   uses: softprops/action-gh-release@v1
+    #   if: startsWith(github.ref, 'refs/tags/')
+    #   with:
+    #     files: _build/*.run
+
+  macos:
+    runs-on: macos-latest
+    steps:
+    # Install general deps
+    - name: "Install brew deps"
+      run: |
+          brew install binutils coreutils wget erlang
+
+    - run: |
+        mkdir $HOME/elixir && cd $HOME/elixir
+        wget https://github.com/elixir-lang/elixir/releases/download/v1.11.4/Precompiled.zip
+        unzip Precompiled.zip
+        echo "$HOME/elixir/bin" >> $GITHUB_PATH
+
+    - uses: actions/checkout@v1
+    - run: |
+        mix local.hex --force
+        mix local.rebar --force
+        mix deps.get
+        mix lint
+
+    - run: MIX_ENV=prod mix release
+
+    - name: Archive MacOS Installer
+      uses: actions/upload-artifact@v2
+      with:
+        name: MacOS-Installer
+        path: _build/prod/*.dmg
