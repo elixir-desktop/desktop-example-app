@@ -31,7 +31,7 @@ defmodule TodoApp.Menu do
   end
 
   defp set_state_icon(menu) do
-    if checked?(menu.todos) do
+    if checked?(menu.assigns.todos) do
       Menu.set_icon(menu, {:file, "icon32x32-done.png"})
     else
       Menu.set_icon(menu, {:file, "icon32x32.png"})
