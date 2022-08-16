@@ -26,6 +26,17 @@ This example assumes you've got installed:
 If you want to build for iOS you'll also need xcode and in order to build for Android you'll need the
 Android Studio.
 
+## Application set-up
+
+Run:
+
+```bash
+cd assets
+npm install
+cd ..
+mix assets.deploy
+```
+
 ## Screenshots
 
 ![Linux build](/nodeploy/linux_todo.png?raw=true "Linux build")
