@@ -56,7 +56,8 @@ defmodule Todo.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ecto_sqlite3, "~> 0.7"},
+      {:ecto_sqlite3, "~> 0.8"},
+      {:exqlite, github: "elixir-desktop/exqlite", override: true},
       # {:desktop, path: "../desktop"},
       {:desktop, github: "elixir-desktop/desktop", tag: "v1.4.0"},
 
