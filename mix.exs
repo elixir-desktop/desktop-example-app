@@ -59,7 +59,7 @@ defmodule Todo.MixProject do
       {:ecto_sqlite3, "~> 0.8"},
       {:exqlite, github: "elixir-desktop/exqlite", override: true},
       # {:desktop, path: "../desktop"},
-      {:desktop, github: "elixir-desktop/desktop", tag: "v1.4.0"},
+      {:desktop, "~> 1.4"},
 
       # Phoenix
       {:phoenix, "~> 1.6"},
