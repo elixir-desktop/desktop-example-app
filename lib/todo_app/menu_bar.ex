@@ -9,19 +9,19 @@ defmodule TodoApp.MenuBar do
   alias Desktop.Window
 
   def render(assigns) do
-    ~E"""
+    ~H"""
     <menubar>
-    <menu label="<%= gettext "File" %>">
+    <menu label={gettext "File"}>
         <%= for item <- @todos do %>
         <item
-            type="checkbox" onclick="toggle:<%= item.id %>"
-            <%= if item.status == "done" do %>checked="checked"<% end %>
+            type="checkbox" onclick={"toggle:#{item.id}"}
+            checked={item.status == "done"}
             ><%= item.text %></item>
         <% end %>
         <hr/>
         <item onclick="quit"><%= gettext "Quit" %></item>
     </menu>
-    <menu label="<%= gettext "Extra" %>">
+    <menu label={gettext "Extra"}>
         <item onclick="notification"><%= gettext "Show Notification" %></item>
         <item onclick="observer"><%= gettext "Show Observer" %></item>
         <item onclick="browser"><%= gettext "Open Browser" %></item>
