@@ -19,8 +19,4 @@ jobs:
         mix local.hex --force
         mix local.rebar --force
         mix deps.get
-        mix compile
-        mix format --check-formatted
-        # Credo otherwise complains about `TODO` tags in our comments...
-        mix credo --ignore design
-        # mix test
+        mix lint

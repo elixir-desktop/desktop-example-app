@@ -49,6 +49,11 @@ defmodule Todo.MixProject do
         "esbuild default --minify",
         "sass default --no-source-map --style=compressed",
         "phx.digest"
+      ],
+      lint: [
+        "compile --warnings-as-errors",
+        "format --check-formatted",
+        "credo --ignore design"
       ]
     ]
   end
