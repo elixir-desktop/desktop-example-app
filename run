@@ -1,4 +1,6 @@
 #!/bin/bash
+# Ubuntu bug workaround (see e.g. https://github.com/reflex-frp/reflex-platform/issues/735)
+export WEBKIT_DISABLE_COMPOSITING_MODE=1
 export WX_APP_ICON="priv/icon.png"
 export WX_APP_TITLE="Todo"
 exec iex -S mix
