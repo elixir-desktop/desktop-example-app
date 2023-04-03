@@ -10,68 +10,68 @@
 msgid ""
 msgstr ""
 
-#, elixir-format
 #: lib/todo_app/menubar.eex:14
+#, elixir-format
 msgid "About"
 msgstr ""
 
-#, elixir-format
-#: lib/todo_app/menubar.eex:2 lib/todo_app/menubar.ex:14
+#: lib/todo_app/menu_bar.ex:14
+#, elixir-format, elixir-autogen
 msgid "File"
 msgstr ""
 
-#, elixir-format
 #: lib/todo_app/menubar.eex:13
+#, elixir-format
 msgid "Help"
 msgstr ""
 
-#, elixir-format
-#: lib/todo_app/menu.eex:2
+#: lib/todo_app/menu.html.heex:2
+#, elixir-format, elixir-autogen
 msgid "Open"
 msgstr ""
 
-#, elixir-format
-#: lib/todo_app/menu.eex:12 lib/todo_app/menubar.eex:11
-#: lib/todo_app/menubar.ex:22
+#: lib/todo_app/menu.html.heex:12
+#: lib/todo_app/menu_bar.ex:22
+#, elixir-format, elixir-autogen
 msgid "Quit"
 msgstr ""
 
-#, elixir-format
-#: lib/todo_app/menubar.ex:56
+#: lib/todo_app/menu_bar.ex:56
+#, elixir-format, elixir-autogen
 msgid "Sample Elixir Desktop App!"
 msgstr ""
 
-#, elixir-format
-#: lib/todo_app/menubar.ex:24
+#: lib/todo_app/menu_bar.ex:24
+#, elixir-format, elixir-autogen
 msgid "Extra"
 msgstr ""
 
-#, elixir-format
-#: lib/todo_app/menubar.ex:27
+#: lib/todo_app/menu_bar.ex:27
+#, elixir-format, elixir-autogen
 msgid "Open Browser"
 msgstr ""
 
-#, elixir-format
-#: lib/todo_app/menubar.ex:25
+#: lib/todo_app/menu_bar.ex:25
+#, elixir-format, elixir-autogen
 msgid "Show Notification"
 msgstr ""
 
-#, elixir-format
-#: lib/todo_app/menubar.ex:26
+#: lib/todo_app/menu_bar.ex:26
+#, elixir-format, elixir-autogen
 msgid "Show Observer"
 msgstr ""
 
-#, elixir-format
 #: lib/todo_web/templates/layout/root.html.leex:8
+#, elixir-format, elixir-autogen
 msgid " · Your Todos"
 msgstr ""
 
-#, elixir-format
 #: lib/todo_web/live/todo_live.html.leex:4
+#, elixir-format, elixir-autogen
 msgid "Add new todo item..."
 msgstr ""
 
-#, elixir-format
 #: lib/todo_web/live/todo_live.html.leex:2
+#, elixir-format, elixir-autogen
 msgid "My Todo List"
 msgstr ""

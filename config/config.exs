@@ -17,7 +17,7 @@ config :dart_sass,
 
 config :logger,
   handle_otp_reports: true,
-  handle_sasl_reports: true,
+  handle_sasl_reports: false,
   backends: [:console]
 
 config :logger, :console,

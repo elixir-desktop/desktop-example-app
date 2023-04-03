@@ -2,6 +2,10 @@
 
 This application is an example of an Elixir LiveView based desktop application. It uses the elixir-desktop library and a local SQLite database to create a web-technology based desktop app.
 
+## Changes in 1.1
+
+- Updated to Phoenix 1.7 and LiveView 0.18
+
 ## Changes in 1.0
 
 - Updated to Phoenix 1.6 with esbuild+dart_scss

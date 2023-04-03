@@ -1,14 +1,14 @@
 defmodule Todo.MixProject do
   use Mix.Project
 
-  @version "1.0.0"
+  @version "1.1.0"
   def project do
     [
       app: :todo_app,
       version: @version,
       elixir: "~> 1.10",
       elixirc_paths: elixirc_paths(Mix.env()),
-      compilers: [:phoenix | Mix.compilers()],
+      compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       aliases: aliases()
@@ -63,24 +63,25 @@ defmodule Todo.MixProject do
     deps_list = [
       {:ecto_sqlite3, "~> 0.8"},
       {:exqlite, github: "elixir-desktop/exqlite", override: true},
-      # {:desktop, path: "../desktop"},
-      {:desktop, "~> 1.4"},
+      {:desktop, path: "../desktop"},
+      # {:desktop, "~> 1.4"},
 
       # Phoenix
-      {:phoenix, "~> 1.6"},
-      {:phoenix_live_view, "~> 0.17.11"},
+      {:phoenix, "~> 1.7"},
+      {:phoenix_live_view, "~> 0.18"},
       {:phoenix_html, "~> 3.0"},
-      {:phoenix_live_reload, "~> 1.3", only: [:dev]},
-      {:gettext, "~> 0.18"},
-      {:plug_cowboy, "~> 2.5"},
-      {:jason, "~> 1.2"},
+      {:phoenix_view, "~> 2.0"},
+      {:phoenix_live_reload, "~> 1.4", only: [:dev]},
+      {:gettext, "~> 0.22"},
+      {:plug_cowboy, "~> 2.6"},
+      {:jason, "~> 1.4"},
 
       # Assets
-      {:esbuild, "~> 0.2", runtime: Mix.env() == :dev},
-      {:dart_sass, "~> 0.2", runtime: Mix.env() == :dev},
+      {:esbuild, "~> 0.7", runtime: Mix.env() == :dev},
+      {:dart_sass, "~> 0.5", runtime: Mix.env() == :dev},
 
       # Credo
-      {:credo, "~> 1.5", only: [:dev, :test], runtime: false}
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
 
     if Mix.target() in [:android, :ios] do
