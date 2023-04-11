@@ -63,8 +63,8 @@ defmodule Todo.MixProject do
     deps_list = [
       {:ecto_sqlite3, "~> 0.8"},
       {:exqlite, github: "elixir-desktop/exqlite", override: true},
-      {:desktop, path: "../desktop"},
-      # {:desktop, "~> 1.4"},
+      # {:desktop, path: "../desktop"},
+      {:desktop, "~> 1.5"},
 
       # Phoenix
       {:phoenix, "~> 1.7"},
@@ -85,7 +85,7 @@ defmodule Todo.MixProject do
     ]
 
     if Mix.target() in [:android, :ios] do
-      deps_list ++ [{:wx, "~> 1.0", hex: :bridge, targets: [:android, :ios]}]
+      deps_list ++ [{:wx, "~> 1.1", hex: :bridge, targets: [:android, :ios]}]
     else
       deps_list
     end

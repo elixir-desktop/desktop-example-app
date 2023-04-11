@@ -27,7 +27,8 @@ config :logger, :console,
 
 # Configures the endpoint
 config :todo_app, TodoWeb.Endpoint,
-  http: [ip: {127, 0, 0, 1}, port: 0],
+  # because of the iOS rebind - this is now a fixed port, but randomly selected
+  http: [ip: {127, 0, 0, 1}, port: 10_000 + :rand.uniform(45_000)],
   render_errors: [view: TodoWeb.ErrorView, accepts: ~w(html json), layout: false],
   pubsub_server: TodoApp.PubSub,
   live_view: [signing_salt: "sWpG9ljX"],
