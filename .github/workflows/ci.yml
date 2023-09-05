@@ -12,7 +12,7 @@ jobs:
     - name: "Install msys2"
       uses: msys2/setup-msys2@v2
       with:
-          install: pacman-mirrors pkg-config base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-go upx mingw-w64-x86_64-dlfcn unzip git
+          install: pacman-mirrors pkg-config base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-go upx mingw-w64-x86_64-dlfcn unzip git tar
           update: false
 
     - name: "Installing Erlang"
