@@ -16,7 +16,7 @@ defmodule Todo.MixProject do
         default_release: [
           applications: [runtime_tools: :permanent, ssl: :permanent],
           steps: [
-            &Desktop.Deployment.prepare_release/1,
+            # &Desktop.Deployment.prepare_release/1,
             :assemble,
             &Desktop.Deployment.generate_installer/1
           ]
