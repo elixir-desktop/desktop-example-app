@@ -1,33 +1,89 @@
 name: "CI"
 on: ["push", "pull_request"]
+env:
+  WXWIDGETS_VERSION: 3.1.4
+  OTP_VERSION: 25.0.4
 
 jobs:
   windows:
     runs-on: windows-latest
     defaults:
       run:
-        shell: msys2 {0}
+        shell: wsl-bash {0}
+    name: Build Erlang/OTP (Windows)
     steps:
-    # Install general deps
+    - uses: Vampire/setup-wsl@v2
+      with:
+        distribution: Ubuntu-18.04
+
+    - name: Install WSL dependencies
+      run: apt update && apt install -y g++-mingw-w64 gcc-mingw-w64 make autoconf unzip
+
+    - name: Install openssl
+      shell: cmd
+      run: |
+        choco install openssl
+        move "c:\\Program Files\\OpenSSL" "c:\\OpenSSL-Win64"
+
+    - name: Download wxWidgets
+      run: |
+        wget https://github.com/wxWidgets/wxWidgets/releases/download/v${{ env.WXWIDGETS_VERSION }}/wxWidgets-${{ env.WXWIDGETS_VERSION }}.zip
+        unzip wxWidgets-${{ env.WXWIDGETS_VERSION }}.zip -d wxWidgets
+        sed -i -r -e 's/wxUSE_POSTSCRIPT +0/wxUSE_POSTSCRIPT 1/' wxWidgets/include/wx/msw/setup.h
+        sed -i -r -e 's/wxUSE_WEBVIEW_EDGE +0/wxUSE_WEBVIEW_EDGE 1/' wxWidgets/include/wx/msw/setup.h
+
+    - name: Install WebView2
+      shell: cmd
+      run: |
+        cd wxWidgets\\3rdparty
+        nuget install Microsoft.Web.WebView2 -Version 1.0.705.50 -Source https://api.nuget.org/v3/index.json
+        rename Microsoft.Web.WebView2.1.0.705.50 webview2
+
+    - name: Build wxWidgets
+      shell: cmd
+      run: |
+        cd wxWidgets\\build\\msw
+        call "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\VC\Auxiliary\\Build\\vcvars64.bat"
+        nmake TARGET_CPU=amd64 BUILD=release SHARED=0 DIR_SUFFIX_CPU= -f makefile.vc
+
+    - name: Compile Erlang
+      run: |
+        mkdir -p /mnt/c/opt/local64/pgm/
+        cp -R wxWidgets /mnt/c/opt/local64/pgm/wxWidgets-${{ env.WXWIDGETS_VERSION }}
+        wget https://github.com/erlang/otp/releases/download/OTP-${{ env.OTP_VERSION }}/otp_src_${{ env.OTP_VERSION }}.tar.gz
+        tar -xzf ./otp_src_${{ env.OTP_VERSION }}.tar.gz
+        mv otp_src_${{ env.OTP_VERSION }} otp
+        cd otp
+        export ERL_TOP=`pwd`
+        export MAKEFLAGS=-j$(($(nproc) + 2))
+        export ERLC_USE_SERVER=true
+        export ERTS_SKIP_DEPEND=true
+        eval `./otp_build env_win32 x64`
+        ./otp_build configure
+        if cat erts/CONF_INFO ||
+            grep -v "Static linking with OpenSSL 3.0" lib/*/CONF_INFO ||
+            cat lib/*/SKIP ||
+            cat lib/SKIP-APPLICATIONS; then
+            exit 1
+        fi
+        ./otp_build boot -a
+        ./otp_build release -a
+        cp /mnt/c/opt/local64/pgm/wxWidgets-${{ env.WXWIDGETS_VERSION }}/3rdparty/webview2/runtimes/win-x64/native/WebView2Loader.dll $ERL_TOP/release/win32/erts-*/bin/
+        ./otp_build installer_win32
+
+    # - name: Upload installer
+    #   uses: actions/upload-artifact@v3
+    #   with:
+    #     name: otp_win32_installer
+    #     path: otp/release/win32/otp*.exe
+
+    # TODO: INSTALL ERLANG + ELIXIR
+
     - name: "Install msys2"
       uses: msys2/setup-msys2@v2
       with:
           install: pacman-mirrors pkg-config base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-go upx mingw-w64-x86_64-dlfcn unzip git tar
           update: false
-
-    - name: "Installing Erlang"
-      run: |
-        git clone https://github.com/asdf-vm/asdf.git ~/.asdf
-        . $HOME/.asdf/asdf.sh
-        # echo "$HOME/.asdf/bin" >> $GITHUB_PATH
-        # echo "$HOME/.asdf/shims" >> $GITHUB_PATH
-        asdf plugin add erlang
-        asdf plugin add elixir
-        echo "erlang 25.0.4" >> .tool-versions
-        echo "elixir 1.13.4-otp-25" >> .tool-versions
-        asdf install
-    # - run: choco install erlang
-    #   shell: powershell
 
     - uses: actions/checkout@v1
     - run: |
