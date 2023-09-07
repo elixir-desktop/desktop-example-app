@@ -22,7 +22,7 @@ jobs:
     - name: Install openssl
       shell: cmd
       run: |
-        choco install openssl
+        choco install openssl --version=1.1.1.2100
         move "c:\\Program Files\\OpenSSL" "c:\\OpenSSL-Win64"
 
     - name: Download wxWidgets
