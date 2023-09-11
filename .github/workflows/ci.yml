@@ -71,7 +71,7 @@ jobs:
         ./otp_build release -a
         cp /mnt/c/opt/local64/pgm/wxWidgets-${{ env.WXWIDGETS_VERSION }}/3rdparty/webview2/runtimes/win-x64/native/WebView2Loader.dll $ERL_TOP/release/win32/erts-*/bin/
         ./otp_build installer_win32
-        export NAME=`ls otp/release/win32/otp*.exe`
+        export NAME=`ls release/win32/otp*.exe`
         cp $NAME /mnt/c/opt/
         echo "$NAME /S" >> /mnt/c/opt/installer.bat
 
