@@ -72,12 +72,11 @@ jobs:
         cp /mnt/c/opt/local64/pgm/wxWidgets-${{ env.WXWIDGETS_VERSION }}/3rdparty/webview2/runtimes/win-x64/native/WebView2Loader.dll $ERL_TOP/release/win32/erts-*/bin/
         ./otp_build installer_win32
         export NAME=`ls release/win32/otp*.exe`
-        cp $NAME /mnt/c/opt/
-        echo "$NAME /S" >> /mnt/c/opt/installer.bat
+        cp $NAME /mnt/c/opt/otp.exe
 
     - name: Run Erlang installer
       shell: cmd
-      run: C:\\opt\\installer.bat
+      run: C:\\opt\\otp.exe /S
 
     - name: Locate Erlang
       run: |
@@ -114,6 +113,25 @@ jobs:
   linux:
     runs-on: ubuntu-20.04
     steps:
+
+    - name: "Installing wxWidgets"
+      run: |
+        mkdir ~/projects && cd ~/projects
+        git clone https://github.com/wxWidgets/wxWidgets.git
+        cd wxWidgets; 
+        git checkout v${{ env.WXWIDGETS_VERSION }}
+        ./configure --prefix=/usr/local/wxWidgets --enable-clipboard --enable-controls \
+              --enable-dataviewctrl --enable-display \
+              --enable-dnd --enable-graphics_ctx \
+              --enable-std_string --enable-svg \
+              --enable-unicode --enable-webview \
+              --with-expat --with-libjpeg \
+              --with-libpng --with-libtiff \
+              --with-opengl --with-zlib \
+              --disable-precomp-headers --disable-monolithic
+        make -j2
+        sudo make install
+
     # Install general deps
     - name: "Installing Erlang"
       run: |
@@ -123,8 +141,8 @@ jobs:
         # echo "$HOME/.asdf/shims" >> $GITHUB_PATH
         asdf plugin add erlang
         asdf plugin add elixir
-        echo "erlang 25.0.4" >> .tool-versions
-        echo "elixir 1.13.4-otp-25" >> .tool-versions
+        echo "erlang ${{ env.OTP_VERSION }}" >> .tool-versions
+        echo "elixir ${{ env.ELIXIR_VERSION }}-otp-25" >> .tool-versions
         asdf install
 
     - uses: actions/checkout@v1
@@ -158,7 +176,7 @@ jobs:
     # Install general deps
     - name: "Install brew deps"
       run: |
-          brew install binutils coreutils wget erlang
+          brew install binutils coreutils wget
 
     - name: "Installing Erlang"
       run: |
@@ -168,8 +186,9 @@ jobs:
         # echo "$HOME/.asdf/shims" >> $GITHUB_PATH
         asdf plugin add erlang
         asdf plugin add elixir
-        echo "erlang 25.0.4" >> .tool-versions
-        echo "elixir 1.13.4-otp-25" >> .tool-versions
+        echo "erlang ${{ env.OTP_VERSION }}" >> .tool-versions
+        echo "elixir ${{ env.ELIXIR_VERSION }}-otp-25" >> .tool-versions
+        export KERL_CONFIGURE_OPTIONS="--disable-jit"
         asdf install
     
     - uses: actions/checkout@v1
