@@ -147,7 +147,7 @@ jobs:
         asdf plugin add elixir
         echo "erlang ${{ env.OTP_VERSION }}" >> .tool-versions
         echo "elixir ${{ env.ELIXIR_VERSION }}-otp-25" >> .tool-versions
-        export KERL_CONFIGURE_OPTIONS="--with-wxdir=~/projects/wxWidgets"
+        export KERL_CONFIGURE_OPTIONS="--with-wxdir=$HOME/projects/wxWidgets"
         asdf install
 
     - uses: actions/checkout@v1
@@ -211,7 +211,7 @@ jobs:
         asdf plugin add elixir
         echo "erlang ${{ env.OTP_VERSION }}" >> .tool-versions
         echo "elixir ${{ env.ELIXIR_VERSION }}-otp-25" >> .tool-versions
-        export KERL_CONFIGURE_OPTIONS="--with-wxdir=~/projects/wxWidgets --disable-jit"
+        export KERL_CONFIGURE_OPTIONS="--with-wxdir=$HOME/projects/wxWidgets --disable-jit"
         asdf install
     
     - uses: actions/checkout@v1

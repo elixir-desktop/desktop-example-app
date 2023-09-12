@@ -36,7 +36,7 @@ RUN git clone https://github.com/asdf-vm/asdf.git ${ASDF_DIR} && \
     asdf plugin add elixir && \
     echo "erlang ${OTP_VERSION}" >> .tool-versions && \
     echo "elixir ${ELIXIR_VERSION}-otp-25" >> .tool-versions && \
-    export KERL_CONFIGURE_OPTIONS="--with-wxdir=~/projects/wxWidgets" && \
+    export KERL_CONFIGURE_OPTIONS="--with-wxdir=/root/projects/wxWidgets" && \
     asdf install
 
 # Compile and lint
