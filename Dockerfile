@@ -51,6 +51,7 @@ RUN . ${ASDF_DIR}/asdf.sh && \
     mix deps.compile
 
 # Build Release
+ENV LD_LIBRARY_PATH=/root/projects/wxWidgets/lib/
 COPY . /app/
 RUN . ${ASDF_DIR}/asdf.sh && \
     cd /app && \

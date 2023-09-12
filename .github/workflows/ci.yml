@@ -226,6 +226,7 @@ jobs:
     - name: "Build Release"
       run: |
         . $HOME/.asdf/asdf.sh
+        export LD_LIBRARY_PATH="$HOME/projects/wxWidgets/lib/"
         mix desktop.installer
 
     - name: Archive MacOS Installer
