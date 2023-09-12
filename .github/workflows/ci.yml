@@ -82,11 +82,11 @@ jobs:
 
     - name: Locate Erlang
       run: |
-        find /mnt/c/Program\ Files -type d -name "erts-*" -not -path "*lib*" >> $GITHUB_PATH
+        find /mnt/c/Program\ Files -type d -name "erts-*" -not -path "*lib*" >> "$GITHUB_PATH"
         mkdir $HOME/elixir && cd $HOME/elixir
         wget https://github.com/elixir-lang/elixir/releases/download/v${{ env.ELIXIR_VERSION }}/Precompiled.zip
         unzip Precompiled.zip
-        echo "$HOME/elixir/bin" >> $GITHUB_PATH
+        echo "$HOME/elixir/bin" >> "$GITHUB_PATH"
 
     # TODO: INSTALL ERLANG + ELIXIR
     - name: "Install msys2"
@@ -245,4 +245,4 @@ jobs:
         username: dominicletz
         password: "${{ secrets.GITHUB_TOKEN }}"  # you don't need to manually set this secret. GitHub does it on your behalf
         registry: docker.pkg.github.com
-        image_name: LinuxInstaller
+        image_name: linux_installer
