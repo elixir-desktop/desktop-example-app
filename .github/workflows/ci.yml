@@ -135,7 +135,6 @@ jobs:
               --with-opengl --with-zlib \
               --disable-precomp-headers --disable-monolithic
         make -j2
-        sudo make install
 
     # Install general deps
     - name: "Installing Erlang"
@@ -148,7 +147,7 @@ jobs:
         asdf plugin add elixir
         echo "erlang ${{ env.OTP_VERSION }}" >> .tool-versions
         echo "elixir ${{ env.ELIXIR_VERSION }}-otp-25" >> .tool-versions
-        export KERL_CONFIGURE_OPTIONS="--with-wxdir=/usr/local/wxWidgets"
+        export KERL_CONFIGURE_OPTIONS="--with-wxdir=~/projects/wxWidgets"
         asdf install
 
     - uses: actions/checkout@v1
@@ -201,7 +200,6 @@ jobs:
               --with-opengl --with-zlib \
               --disable-precomp-headers --disable-monolithic
         make -j2
-        sudo make install
 
     - name: "Installing Erlang"
       run: |
@@ -213,7 +211,7 @@ jobs:
         asdf plugin add elixir
         echo "erlang ${{ env.OTP_VERSION }}" >> .tool-versions
         echo "elixir ${{ env.ELIXIR_VERSION }}-otp-25" >> .tool-versions
-        export KERL_CONFIGURE_OPTIONS="--with-wxdir=/usr/local/wxWidgets --disable-jit"
+        export KERL_CONFIGURE_OPTIONS="--with-wxdir=~/projects/wxWidgets --disable-jit"
         asdf install
     
     - uses: actions/checkout@v1
