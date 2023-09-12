@@ -31,8 +31,9 @@ jobs:
         git clone https://github.com/wxWidgets/wxWidgets.git
         cd wxWidgets
         git checkout v${{ env.WXWIDGETS_VERSION }} --recurse-submodules
-        sed -i -r -e 's/wxUSE_POSTSCRIPT +0/wxUSE_POSTSCRIPT 1/' include/wx/ms*/setup.h
-        sed -i -r -e 's/wxUSE_WEBVIEW_EDGE +0/wxUSE_WEBVIEW_EDGE 1/' include/wx/ms*/setup.h
+        git submodule update --init
+        # sed -i -r -e 's/wxUSE_POSTSCRIPT +0/wxUSE_POSTSCRIPT 1/' include/wx/msvc/setup.h
+        # sed -i -r -e 's/wxUSE_WEBVIEW_EDGE +0/wxUSE_WEBVIEW_EDGE 1/' include/wx/msvc/setup.h
 
     - name: Install WebView2
       shell: cmd
@@ -123,7 +124,7 @@ jobs:
         git clone https://github.com/wxWidgets/wxWidgets.git
         cd wxWidgets; 
         git checkout v${{ env.WXWIDGETS_VERSION }} --recurse-submodules
-        git submodule update
+        git submodule update --init
         ./configure --prefix=/usr/local/wxWidgets --enable-clipboard --enable-controls \
               --enable-dataviewctrl --enable-display \
               --enable-dnd --enable-graphics_ctx \
@@ -189,7 +190,7 @@ jobs:
         git clone https://github.com/wxWidgets/wxWidgets.git
         cd wxWidgets; 
         git checkout v${{ env.WXWIDGETS_VERSION }} --recurse-submodules
-        git submodule update
+        git submodule update --init
         ./configure --prefix=/usr/local/wxWidgets --enable-clipboard --enable-controls \
               --enable-dataviewctrl --enable-display \
               --enable-dnd --enable-graphics_ctx \
@@ -234,3 +235,14 @@ jobs:
       with:
         name: MacOS-Installer
         path: _build/prod/*.dmg
+
+  build-gh:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: whoan/docker-build-with-cache-action@master
+      with:
+        username: dominicletz
+        password: "${{ secrets.GITHUB_TOKEN }}"  # you don't need to manually set this secret. GitHub does it on your behalf
+        registry: docker.pkg.github.com
+        image_name: LinuxInstaller
