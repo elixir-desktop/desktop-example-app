@@ -28,10 +28,11 @@ jobs:
 
     - name: Download wxWidgets
       run: |
-        wget https://github.com/wxWidgets/wxWidgets/releases/download/v${{ env.WXWIDGETS_VERSION }}/wxWidgets-${{ env.WXWIDGETS_VERSION }}.zip
-        unzip wxWidgets-${{ env.WXWIDGETS_VERSION }}.zip -d wxWidgets
-        sed -i -r -e 's/wxUSE_POSTSCRIPT +0/wxUSE_POSTSCRIPT 1/' wxWidgets/include/wx/msw/setup.h
-        sed -i -r -e 's/wxUSE_WEBVIEW_EDGE +0/wxUSE_WEBVIEW_EDGE 1/' wxWidgets/include/wx/msw/setup.h
+        git clone https://github.com/wxWidgets/wxWidgets.git
+        cd wxWidgets
+        git checkout v${{ env.WXWIDGETS_VERSION }} --recurse-submodules
+        sed -i -r -e 's/wxUSE_POSTSCRIPT +0/wxUSE_POSTSCRIPT 1/' include/wx/msw/setup.h
+        sed -i -r -e 's/wxUSE_WEBVIEW_EDGE +0/wxUSE_WEBVIEW_EDGE 1/' include/wx/msw/setup.h
 
     - name: Install WebView2
       shell: cmd
@@ -119,9 +120,9 @@ jobs:
         sudo apt install libssl-dev libjpeg-dev libpng-dev libtiff-dev zlib1g-dev libncurses5-dev libssh-dev unixodbc-dev libgmp3-dev libwebkit2gtk-4.0-dev libsctp-dev libgtk-3-dev libnotify-dev libsecret-1-dev catch mesa-common-dev libglu1-mesa-dev freeglut3-dev
 
         mkdir ~/projects && cd ~/projects
-        git clone --recurse-submodules https://github.com/wxWidgets/wxWidgets.git
+        git clone https://github.com/wxWidgets/wxWidgets.git
         cd wxWidgets; 
-        git checkout v${{ env.WXWIDGETS_VERSION }}
+        git checkout v${{ env.WXWIDGETS_VERSION }} --recurse-submodules
         ./configure --prefix=/usr/local/wxWidgets --enable-clipboard --enable-controls \
               --enable-dataviewctrl --enable-display \
               --enable-dnd --enable-graphics_ctx \
@@ -145,6 +146,7 @@ jobs:
         asdf plugin add elixir
         echo "erlang ${{ env.OTP_VERSION }}" >> .tool-versions
         echo "elixir ${{ env.ELIXIR_VERSION }}-otp-25" >> .tool-versions
+        export KERL_CONFIGURE_OPTIONS="--with-wxdir=/usr/local/wxWidgets"
         asdf install
 
     - uses: actions/checkout@v1
@@ -178,7 +180,25 @@ jobs:
     # Install general deps
     - name: "Install brew deps"
       run: |
-          brew install binutils coreutils wget
+          brew install binutils coreutils wget wxwidgets
+
+    - name: "Installing wxWidgets"
+      run: |
+        mkdir ~/projects && cd ~/projects
+        git clone https://github.com/wxWidgets/wxWidgets.git
+        cd wxWidgets; 
+        git checkout v${{ env.WXWIDGETS_VERSION }} --recurse-submodules
+        ./configure --prefix=/usr/local/wxWidgets --enable-clipboard --enable-controls \
+              --enable-dataviewctrl --enable-display \
+              --enable-dnd --enable-graphics_ctx \
+              --enable-std_string --enable-svg \
+              --enable-unicode --enable-webview \
+              --with-expat --with-libjpeg \
+              --with-libpng --with-libtiff \
+              --with-opengl --with-zlib \
+              --disable-precomp-headers --disable-monolithic
+        make -j2
+        sudo make install
 
     - name: "Installing Erlang"
       run: |
@@ -190,7 +210,7 @@ jobs:
         asdf plugin add elixir
         echo "erlang ${{ env.OTP_VERSION }}" >> .tool-versions
         echo "elixir ${{ env.ELIXIR_VERSION }}-otp-25" >> .tool-versions
-        export KERL_CONFIGURE_OPTIONS="--disable-jit"
+        export KERL_CONFIGURE_OPTIONS="--with-wxdir=/usr/local/wxWidgets --disable-jit"
         asdf install
     
     - uses: actions/checkout@v1
