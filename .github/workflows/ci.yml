@@ -31,8 +31,8 @@ jobs:
         git clone https://github.com/wxWidgets/wxWidgets.git
         cd wxWidgets
         git checkout v${{ env.WXWIDGETS_VERSION }} --recurse-submodules
-        sed -i -r -e 's/wxUSE_POSTSCRIPT +0/wxUSE_POSTSCRIPT 1/' include/wx/msw/setup.h
-        sed -i -r -e 's/wxUSE_WEBVIEW_EDGE +0/wxUSE_WEBVIEW_EDGE 1/' include/wx/msw/setup.h
+        sed -i -r -e 's/wxUSE_POSTSCRIPT +0/wxUSE_POSTSCRIPT 1/' include/wx/ms*/setup.h
+        sed -i -r -e 's/wxUSE_WEBVIEW_EDGE +0/wxUSE_WEBVIEW_EDGE 1/' include/wx/ms*/setup.h
 
     - name: Install WebView2
       shell: cmd
@@ -123,6 +123,7 @@ jobs:
         git clone https://github.com/wxWidgets/wxWidgets.git
         cd wxWidgets; 
         git checkout v${{ env.WXWIDGETS_VERSION }} --recurse-submodules
+        git submodule update
         ./configure --prefix=/usr/local/wxWidgets --enable-clipboard --enable-controls \
               --enable-dataviewctrl --enable-display \
               --enable-dnd --enable-graphics_ctx \
@@ -188,6 +189,7 @@ jobs:
         git clone https://github.com/wxWidgets/wxWidgets.git
         cd wxWidgets; 
         git checkout v${{ env.WXWIDGETS_VERSION }} --recurse-submodules
+        git submodule update
         ./configure --prefix=/usr/local/wxWidgets --enable-clipboard --enable-controls \
               --enable-dataviewctrl --enable-display \
               --enable-dnd --enable-graphics_ctx \
