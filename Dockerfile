@@ -14,7 +14,7 @@ RUN mkdir ~/projects && cd ~/projects && \
     git clone ${WXWIDGETS_REPO}
 
 ENV CMAKE_VERSION=3.27.4
-RUN curl -sSL https://github.com/Kitware/CMake/releases/download/v#{CMAKE_VERSION}/cmake-#{CMAKE_VERSION}-linux-x86_64.sh > cmake.sh && \
+RUN curl -sSL https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.sh > cmake.sh && \
     sh cmake.sh --skip-license --prefix=/usr/local
 
 # ENV WXWIDGETS_VERSION=v3.1.4
@@ -29,7 +29,7 @@ RUN cd ~/projects/wxWidgets && \
 # ENV WXWIDGETS_DEBUG=--enable-debug
 ENV WXWIDGETS_DEBUG=
 RUN cd ~/projects/wxWidgets && \
-    ./configure --prefix=/usr/local/wxWidgets #{WXWIDGETS_DEBUG} --enable-webview --enable-compat30 && \
+    ./configure --prefix=/usr/local/wxWidgets ${WXWIDGETS_DEBUG} --enable-webview --enable-compat30 && \
     make -j16
 
 # Installing Erlang
