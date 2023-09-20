@@ -78,7 +78,8 @@ defmodule Todo.MixProject do
       {:ecto_sqlite3, "~> 0.8"},
       {:exqlite, github: "elixir-desktop/exqlite", override: true},
       # {:desktop, path: "../desktop"},
-      {:desktop, "~> 1.5"},
+      # {:desktop, "~> 1.5"},
+      {:desktop, github: "elixir-desktop/desktop"},
       {:desktop_deployment, github: "elixir-desktop/deployment"},
       # {:desktop_deployment, path: "../deployment", runtime: false},
 
