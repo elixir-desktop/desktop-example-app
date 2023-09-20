@@ -1,6 +1,9 @@
 /priv/*.so*
 /priv/*.dylib*
 /priv/static/*
+/Dockerfile
+/build.sh
+/app.run
 *.log
 *.zip
 *.gz

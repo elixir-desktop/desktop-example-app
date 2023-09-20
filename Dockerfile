@@ -1,34 +1,40 @@
 FROM ubuntu:20.04
-ENV WXWIDGETS_VERSION=3.1.4
-ENV OTP_VERSION=25.0.4
-ENV ELIXIR_VERSION=1.13.4
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Installing wxWidgets
 RUN apt-get update
-RUN apt-get install -y libssl-dev libjpeg-dev libpng-dev libtiff-dev zlib1g-dev libncurses5-dev libssh-dev unixodbc-dev libgmp3-dev libwebkit2gtk-4.0-dev libsctp-dev libgtk-3-dev libnotify-dev libsecret-1-dev catch mesa-common-dev libglu1-mesa-dev freeglut3-dev
-RUN apt-get install -y git xxd curl g++ make
+RUN apt-get install -y libssl-dev libjpeg-dev libpng-dev libtiff-dev zlib1g-dev libncurses5-dev libssh-dev unixodbc-dev libgmp3-dev libsctp-dev libgtk-3-dev libnotify-dev libsecret-1-dev catch mesa-common-dev libglu1-mesa-dev freeglut3-dev
+RUN apt-get install -y git xxd curl g++ make libwebkit2gtk-4.0-dev 
 
+ENV WXWIDGETS_REPO=https://github.com/vadz/wxWidgets.git
+# ENV WXWIDGETS_REPO=https://github.com/TcT2k/wxWidgets.git
+# ENV WXWIDGETS_REPO=https://github.com/dominicletz/wxWidgets.git
+# ENV WXWIDGETS_REPO=https://github.com/wxWidgets/wxWidgets.git
 RUN mkdir ~/projects && cd ~/projects && \
-    git clone https://github.com/wxWidgets/wxWidgets.git
+    git clone ${WXWIDGETS_REPO}
 
-RUN cd ~/projects/wxWidgets && \   
-    git checkout v${WXWIDGETS_VERSION} --recurse-submodules && \
-    git submodule update --init
-    
+ENV CMAKE_VERSION=3.27.4
+RUN curl -sSL https://github.com/Kitware/CMake/releases/download/v#{CMAKE_VERSION}/cmake-#{CMAKE_VERSION}-linux-x86_64.sh > cmake.sh && \
+    sh cmake.sh --skip-license --prefix=/usr/local
+
+# ENV WXWIDGETS_VERSION=v3.1.4
+# ENV WXWIDGETS_VERSION=chromium
+ENV WXWIDGETS_VERSION=wide-init-fix
+# ENV WXWIDGETS_VERSION=master
 RUN cd ~/projects/wxWidgets && \
-    ./configure --prefix=/usr/local/wxWidgets --enable-clipboard --enable-controls \
-            --enable-dataviewctrl --enable-display \
-            --enable-dnd --enable-graphics_ctx \
-            --enable-std_string --enable-svg \
-            --enable-unicode --enable-webview \
-            --with-expat --with-libjpeg \
-            --with-libpng --with-libtiff \
-            --with-opengl --with-zlib \
-            --disable-precomp-headers --disable-monolithic && \
-    make -j2
+    git fetch origin && \
+    git reset --hard origin/${WXWIDGETS_VERSION} && \
+    git submodule update --init
+
+# ENV WXWIDGETS_DEBUG=--enable-debug
+ENV WXWIDGETS_DEBUG=
+RUN cd ~/projects/wxWidgets && \
+    ./configure --prefix=/usr/local/wxWidgets #{WXWIDGETS_DEBUG} --enable-webview --enable-compat30 && \
+    make -j16
 
 # Installing Erlang
+ENV OTP_VERSION=25.3.2.6
+ENV ELIXIR_VERSION=1.13.4
 ENV ASDF_DIR=/root/.asdf
 RUN git clone https://github.com/asdf-vm/asdf.git ${ASDF_DIR} && \
     . ${ASDF_DIR}/asdf.sh && \
@@ -55,4 +61,13 @@ ENV LD_LIBRARY_PATH=/root/projects/wxWidgets/lib/
 COPY . /app/
 RUN . ${ASDF_DIR}/asdf.sh && \
     cd /app && \
+    cp /.tool-versions .tool-versions && \
+    MIX_ENV=prod mix compile
+
+# Build Installer
+RUN . ${ASDF_DIR}/asdf.sh  && \
+    cd /app && \
+    mix deps.update desktop && \
+    mix deps.update desktop_deployment && \
+    mix assets.deploy && \
     mix desktop.installer
