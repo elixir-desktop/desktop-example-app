@@ -8,7 +8,7 @@ env:
 
 jobs:
   windows:
-    runs-on: windows-2019
+    runs-on: windows-latest
     defaults:
       run:
         shell: wsl-bash {0}
@@ -25,7 +25,7 @@ jobs:
       shell: cmd
       run: |
         choco install openssl --version=1.1.1.2100
-        move "c:\\Program Files\\OpenSSL" "c:\\OpenSSL-Win64"
+        move "c:\\Program Files\\OpenSSL-Win64" "c:\\OpenSSL-Win64"
 
     - name: Download wxWidgets
       run: |
