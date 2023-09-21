@@ -91,7 +91,7 @@ jobs:
     - name: Locate Erlang
       shell: msys2 {0}
       run: |
-        find /mnt/c/Program\ Files -type d -name "erts-*" -not -path "*lib*" >> "$GITHUB_PATH"
+        find /c/Program\ Files -type d -name "erts-*" -not -path "*lib*" >> "$GITHUB_PATH"
         mkdir $HOME/elixir && cd $HOME/elixir
         wget https://github.com/elixir-lang/elixir/releases/download/v${{ env.ELIXIR_VERSION }}/Precompiled.zip
         unzip Precompiled.zip
