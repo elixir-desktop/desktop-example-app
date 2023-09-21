@@ -80,14 +80,6 @@ jobs:
       shell: cmd
       run: C:\\opt\\otp.exe /S
 
-    - name: Locate Erlang
-      run: |
-        find /mnt/c/Program\ Files -type d -name "erts-*" -not -path "*lib*" >> "$GITHUB_PATH"
-        mkdir $HOME/elixir && cd $HOME/elixir
-        wget https://github.com/elixir-lang/elixir/releases/download/v${{ env.ELIXIR_VERSION }}/Precompiled.zip
-        unzip Precompiled.zip
-        echo "$HOME/elixir/bin" >> "$GITHUB_PATH"
-
     # TODO: INSTALL ERLANG + ELIXIR
     - name: "Install msys2"
       uses: msys2/setup-msys2@v2
@@ -95,14 +87,26 @@ jobs:
           install: pacman-mirrors pkg-config base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-go upx mingw-w64-x86_64-dlfcn unzip git tar
           update: false
 
+    - name: Locate Erlang
+      shell: msys2 {0}
+      run: |
+        find /mnt/c/Program\ Files -type d -name "erts-*" -not -path "*lib*" >> "$GITHUB_PATH"
+        mkdir $HOME/elixir && cd $HOME/elixir
+        wget https://github.com/elixir-lang/elixir/releases/download/v${{ env.ELIXIR_VERSION }}/Precompiled.zip
+        unzip Precompiled.zip
+        echo "$HOME/elixir/bin" >> "$GITHUB_PATH"
+    
     - uses: actions/checkout@v1
-    - run: |
+    - name: "Compile and Lint"
+      shell: msys2 {0}
+      run: |
         mix local.hex --force
         mix local.rebar --force
         mix deps.get
         mix lint
 
     - name: "Build Release"
+      shell: msys2 {0}
       run: |
         mix assets.deploy
         mix desktop.installer
