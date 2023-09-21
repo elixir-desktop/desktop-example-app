@@ -4,10 +4,11 @@ env:
   WXWIDGETS_VERSION: 3.1.4
   OTP_VERSION: 25.0.4
   ELIXIR_VERSION: 1.13.4
+  DOCKER_BUILDKIT: 0
 
 jobs:
   windows:
-    runs-on: windows-latest
+    runs-on: windows-2019
     defaults:
       run:
         shell: wsl-bash {0}
