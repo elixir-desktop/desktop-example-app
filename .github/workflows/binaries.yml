@@ -111,7 +111,7 @@ jobs:
     - name: Locate Erlang
       shell: msys2 {0}
       run: |
-        ERTS=`find /c/Program\ Files/erl* -type d -name "erts-*" -not -path "*lib*"`
+        ERTS=`find /c/Program\ Files/[Ee]rl* -type d -name "erts-*" -not -path "*lib*"`
         echo $ERTS
         echo export PATH=\"\$PATH:$ERTS/bin\" > $HOME/.bashrc
 
