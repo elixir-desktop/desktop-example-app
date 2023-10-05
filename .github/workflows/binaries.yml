@@ -1,0 +1,247 @@
+name: "Build binaries"
+on: ["push", "pull_request"]
+env:
+  OTP_GITHUB_URL: https://github.com/erlang/otp.git
+  OTP_VERSION: 25.0.4
+  WXWIDGETS_REPO: https://github.com/wxWidgets/wxWidgets.git
+  WXWIDGETS_VERSION: master
+  ELIXIR_VERSION: 1.13.4
+  ELIXIR_VARIANT: -otp-24
+  DOCKER_BUILDKIT: 0
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: wsl-bash {0}
+    name: Build Erlang/OTP (Windows)
+    steps:
+    - name: Restore Windows Cache
+      uses: actions/cache/restore@v3
+      id: win32-cache
+      with:
+        path: "c:\\opt\\otp.exe"
+        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}
+  
+    - uses: Vampire/setup-wsl@v2
+      if: steps.win32-cache.outputs.cache-hit != 'true'
+      with:
+        distribution: Ubuntu-18.04
+
+    - name: Install WSL dependencies
+      if: steps.win32-cache.outputs.cache-hit != 'true'
+      run: apt update && apt install -y g++-mingw-w64 gcc-mingw-w64 make autoconf unzip
+
+    - name: Install openssl
+      if: steps.win32-cache.outputs.cache-hit != 'true'
+      shell: cmd
+      run: |
+        choco install openssl --version=1.1.1.2100
+        IF EXIST "c:\\Program Files\\OpenSSL-Win64" (move "c:\\Program Files\\OpenSSL-Win64" "c:\\OpenSSL-Win64") ELSE (move "c:\\Program Files\\OpenSSL" "c:\\OpenSSL-Win64")
+ 
+    - name: Download wxWidgets
+      if: steps.win32-cache.outputs.cache-hit != 'true'
+      run: |
+        git clone ${{ env.WXWIDGETS_REPO }}
+        cd wxWidgets
+        git checkout ${{ env.WXWIDGETS_VERSION }}
+        git submodule update --init
+
+    - name: Install WebView2
+      if: steps.win32-cache.outputs.cache-hit != 'true'
+      shell: cmd
+      run: |
+        cd wxWidgets\\3rdparty
+        nuget install Microsoft.Web.WebView2 -Version 1.0.705.50 -Source https://api.nuget.org/v3/index.json
+        rename Microsoft.Web.WebView2.1.0.705.50 webview2
+
+    - name: Build wxWidgets
+      if: steps.win32-cache.outputs.cache-hit != 'true'
+      shell: cmd
+      run: |
+        cd wxWidgets\\build\\msw
+        call "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise\\VC\Auxiliary\\Build\\vcvars64.bat"
+        nmake TARGET_CPU=amd64 BUILD=release SHARED=0 DIR_SUFFIX_CPU= -f makefile.vc
+
+    - name: Copy wxWidgets
+      if: steps.win32-cache.outputs.cache-hit != 'true'
+      run: |
+        mkdir -p /mnt/c/opt/local64/pgm/
+        cp -R wxWidgets /mnt/c/opt/local64/pgm/wxWidgets-3.x.x
+
+    - name: Compile Erlang
+      if: steps.win32-cache.outputs.cache-hit != 'true'
+      run: |
+        git clone ${{ env.OTP_GITHUB_URL }}
+        cd otp
+        git checkout ${{ env.OTP_VERSION }}
+        export ERL_TOP=`pwd`
+        export MAKEFLAGS=-j$(($(nproc) + 2))
+        export ERLC_USE_SERVER=true
+        export ERTS_SKIP_DEPEND=true
+        eval `./otp_build env_win32 x64`
+        ./otp_build all -a 
+        cp /mnt/c/opt/local64/pgm/wxWidgets-3.x.x/3rdparty/webview2/runtimes/win-x64/native/WebView2Loader.dll $ERL_TOP/release/win32/erts-*/bin/
+        ./otp_build installer_win32
+        export NAME=`ls release/win32/otp*.exe`
+        cp $NAME /mnt/c/opt/otp.exe
+
+    - name: Save Windows Cache
+      if: steps.win32-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v3
+      with:
+        path: "c:\\opt\\otp.exe"
+        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}
+  
+    - name: Run Erlang installer
+      shell: cmd
+      run: C:\\opt\\otp.exe /S
+
+    - name: "Install msys2"
+      uses: msys2/setup-msys2@v2
+      with:
+          install: pacman-mirrors pkg-config base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-go upx mingw-w64-x86_64-dlfcn unzip git tar mingw-w64-x86_64-nodejs autoconf automake libtool gettext-devel gettext mingw-w64-x86_64-imagemagick
+          update: false
+          release: false
+
+    - name: Locate Erlang
+      shell: msys2 {0}
+      run: |
+        ERTS=`find /c/Program\ Files/erl* -type d -name "erts-*" -not -path "*lib*"`
+        echo $ERTS
+        echo export PATH=\"\$PATH:$ERTS/bin\" > $HOME/.bashrc
+
+    - name: Locate NSIS
+      shell: msys2 {0}
+      run: |
+        echo export PATH=\"\$PATH:/c/Program\ Files\ \(x86\)/NSIS\" >> $HOME/.bashrc
+    
+    - name: Install Elixir
+      shell: msys2 {0}
+      run: |
+        mkdir $HOME/elixir && cd $HOME/elixir
+        wget https://github.com/elixir-lang/elixir/releases/download/v${{ env.ELIXIR_VERSION }}/Precompiled.zip
+        unzip Precompiled.zip
+        echo export PATH=\"\$PATH:$HOME/elixir/bin\" >> $HOME/.bashrc
+    
+    - uses: actions/checkout@v1
+    - name: "Compile and Lint"
+      shell: msys2 {0}
+      run: |
+        mix local.hex --force
+        mix local.rebar --force
+        mix deps.get
+        cd assets && npm install
+
+    - name: "Re-assign a:"
+      shell: cmd
+      run: "subst a: d:\\a"
+
+    - name: "Build Release"
+      env:
+        REBAR_TARGET_ARCH_WORDSIZE: 64 
+        REBAR_TARGET_ARCH: x86_64-w64-mingw32 
+      shell: msys2 {0}
+      run: |
+        mix assets.deploy
+        mix desktop.installer
+
+    - name: Archive Installer
+      uses: actions/upload-artifact@v2
+      with:
+        name: Windows-Installer
+        path: _build/prod/*.exe  
+
+  macos:
+    runs-on: macos-11
+    steps:
+    # Install general deps
+    - name: "Install brew deps"
+      run: |
+          brew install binutils coreutils wget wxwidgets automake autoconf libtool
+
+    - name: macOS Cache
+      uses: actions/cache@v3
+      id: macos-cache
+      with:
+        path: /Users/runner/.asdf
+        key: macos-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}
+      
+    - name: "Installing wxWidgets"
+      if: steps.macos-cache.outputs.cache-hit != 'true'
+      run: |
+        mkdir ~/projects && cd ~/projects
+        git clone https://github.com/wxWidgets/wxWidgets.git
+        cd wxWidgets; 
+        git checkout ${{ env.WXWIDGETS_VERSION }}
+        git submodule update --init
+        ./configure --prefix=/usr/local/wxWidgets --enable-webview --enable-compat30 --disable-shared
+        make -j8
+
+    - name: "Installing Erlang"
+      if: steps.macos-cache.outputs.cache-hit != 'true'
+      run: |
+        git clone https://github.com/asdf-vm/asdf.git ~/.asdf
+        . $HOME/.asdf/asdf.sh
+        asdf plugin add erlang
+        asdf plugin add elixir
+        asdf plugin add nodejs
+        echo "erlang ref:${{ env.OTP_VERSION }}" >> .tool-versions
+        echo "elixir ${{ env.ELIXIR_VERSION }}${{ env.ELIXIR_VARIANT }}" >> .tool-versions
+        echo "nodejs v18.7.0" >> .tool-versions
+        export KERL_CONFIGURE_OPTIONS="--enable-parallel-configure --with-wxdir=`echo ~/projects/wxWidgets` --disable-jit --without-javac --disable-debug CXX='gcc -std=c++11'"
+        asdf install
+    
+    - uses: actions/checkout@v1
+    - name: "Compile and Lint"
+      run: |
+        . $HOME/.asdf/asdf.sh
+        echo "erlang ref:${{ env.OTP_VERSION }}" > .tool-versions
+        echo "elixir ${{ env.ELIXIR_VERSION }}${{ env.ELIXIR_VARIANT }}" >> .tool-versions
+        echo "nodejs v18.7.0" >> .tool-versions
+        mix local.hex --force
+        mix local.rebar --force
+        mix deps.get
+        cd assets && npm install
+
+    - name: "Build Release"
+      run: |
+        . $HOME/.asdf/asdf.sh
+        export LD_LIBRARY_PATH="$HOME/projects/wxWidgets/lib/"
+        mix assets.deploy
+        mix desktop.installer
+
+    - name: Archive MacOS Installer
+      uses: actions/upload-artifact@v2
+      with:
+        name: MacOS-Installer
+        path: _build/prod/*.dmg
+
+  linux-x86:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: whoan/docker-build-with-cache-action@master
+      id: docker
+      with:
+        username: ${{github.actor}}
+        password: "${{ secrets.GITHUB_TOKEN }}"  # you don't need to manually set this secret. GitHub does it on your behalf
+        registry: docker.pkg.github.com
+        image_name: linux_installer
+        dockerfile: scripts/Dockerfile
+
+    - name: Extract runfile
+      run: |
+        NAME=$(docker run --platform=linux/amd64 -i ${{steps.docker.outputs.FULL_IMAGE_NAME}} bash -c 'basename `ls /app/_build/prod/*.run`')
+        NAME=`echo $NAME | tr -d '\n\r'`
+        docker run --platform=linux/amd64 -i ${{steps.docker.outputs.FULL_IMAGE_NAME}} bash -c 'xxd /app/_build/prod/*.run' | xxd -r > $NAME
+        chmod +x $NAME
+
+    - name: Archive Installer
+      uses: actions/upload-artifact@v2
+      with:
+        name: Linux-Installer
+        path: ./*.run
+
+  
