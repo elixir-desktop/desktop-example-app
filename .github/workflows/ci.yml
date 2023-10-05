@@ -1,0 +1,20 @@
+name: "CI"
+on: ["push", "pull_request"]
+
+jobs:
+  test_and_build:
+    name: "Build mix release"
+    runs-on: "ubuntu-latest"
+    steps:
+    - name: Setup elixir
+      uses: erlef/setup-beam@v1
+      with:
+        elixir-version: "1.13.4"
+        otp-version: "25.0.4"
+
+    - uses: actions/checkout@v1
+    - run: |
+        mix local.hex --force
+        mix local.rebar --force
+        mix deps.get
+        mix lint

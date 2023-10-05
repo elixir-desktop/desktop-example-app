@@ -9,41 +9,53 @@ RUN apt-get install -y git xxd curl g++ make libwebkit2gtk-4.0-dev unzip procps 
 # ENV WXWIDGETS_REPO=https://github.com/vadz/wxWidgets.git
 # ENV WXWIDGETS_REPO=https://github.com/TcT2k/wxWidgets.git
 # ENV WXWIDGETS_REPO=https://github.com/dominicletz/wxWidgets.git
-ENV WXWIDGETS_REPO=https://github.com/wxWidgets/wxWidgets.git
+ARG WXWIDGETS_REPO
+ENV WXWIDGETS_REPO=${WXWIDGETS_REPO:-https://github.com/wxWidgets/wxWidgets.git}
 RUN mkdir ~/projects && cd ~/projects && \
     git clone ${WXWIDGETS_REPO}
 
-ENV CMAKE_VERSION=3.27.4
+ARG CMAKE_VERSION
+ENV CMAKE_VERSION=${CMAKE_VERSION:-3.27.4}
 RUN curl -sSL https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.sh > cmake.sh && \
     sh cmake.sh --skip-license --prefix=/usr/local
 
 # ENV WXWIDGETS_VERSION=v3.1.4
 # ENV WXWIDGETS_VERSION=chromium
 # ENV WXWIDGETS_VERSION=wide-init-fix
-ENV WXWIDGETS_VERSION=master
+ARG WXWIDGETS_VERSION
+ENV WXWIDGETS_VERSION=${WXWIDGETS_VERSION:-master}
 RUN cd ~/projects/wxWidgets && \
     git fetch origin && \
     git reset --hard origin/${WXWIDGETS_VERSION} && \
     git submodule update --init
 
 # ENV WXWIDGETS_DEBUG=--enable-debug
-ENV WXWIDGETS_DEBUG=
+ARG WXWIDGETS_DEBUG
+ENV WXWIDGETS_DEBUG=${WXWIDGETS_DEBUG:-}
 RUN cd ~/projects/wxWidgets && \
     ./configure --prefix=/usr/local/wxWidgets ${WXWIDGETS_DEBUG} --enable-webview --enable-compat30 --disable-shared && \
     make -j16
 
 # Installing Erlang
-ENV OTP_VERSION=beta
+
+ARG OTP_VERSION
+ENV OTP_VERSION=${OTP_VERSION:-master}
 # Used by ASDF
 # ENV OTP_GITHUB_URL=https://github.com/erlang/otp.git
-ENV OTP_GITHUB_URL=https://github.com/diodechain/otp.git
+ARG OTP_GITHUB_URL
+ENV OTP_GITHUB_URL=${OTP_GITHUB_URL:-https://github.com/erlang/otp.git}
+
 ENV KERL_CONFIGURE_OPTIONS="--with-wxdir=/root/projects/wxWidgets --disable-javac --disable-debug"
-ENV ELIXIR_VERSION=1.13.4
+ARG ELIXIR_VERSION
+ENV ELIXIR_VERSION=${ELIXIR_VERSION:-1.13.4}
+ARG ELIXIR_VARIANT
+ENV ELIXIR_VARIANT=${ELIXIR_VARIANT:-"-otp-26"}
+
 ENV ASDF_DIR=/root/.asdf
 RUN git clone https://github.com/asdf-vm/asdf.git ${ASDF_DIR} && \
     . ${ASDF_DIR}/asdf.sh && \
     asdf plugin add elixir && \
-    echo "elixir ${ELIXIR_VERSION}-otp-24" >> .tool-versions && \
+    echo "elixir ${ELIXIR_VERSION}${ELIXIR_VARIANT}" >> .tool-versions && \
     asdf plugin add erlang && \
     echo "erlang ref:${OTP_VERSION}" >> .tool-versions && \
     asdf plugin add nodejs && \

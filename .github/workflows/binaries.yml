@@ -6,7 +6,7 @@ env:
   WXWIDGETS_REPO: https://github.com/wxWidgets/wxWidgets.git
   WXWIDGETS_VERSION: master
   ELIXIR_VERSION: 1.13.4
-  ELIXIR_VARIANT: -otp-24
+  ELIXIR_VARIANT: -otp-25
   DOCKER_BUILDKIT: 0
 
 jobs:
@@ -225,11 +225,12 @@ jobs:
     - uses: whoan/docker-build-with-cache-action@master
       id: docker
       with:
-        username: ${{github.actor}}
+        username: ${{ github.actor }}
         password: "${{ secrets.GITHUB_TOKEN }}"  # you don't need to manually set this secret. GitHub does it on your behalf
         registry: docker.pkg.github.com
         image_name: linux_installer
         dockerfile: scripts/Dockerfile
+        build_extra_args: "--build-arg=WXWIDGETS_REPO=${{ env.WXWIDGETS_REPO }} --build-arg=WXWIDGETS_VERSION=${{ env.WXWIDGETS_VERSION }} --build-arg=OTP_VERSION=${{ env.OTP_VERSION }} --build-arg=OTP_GITHUB_URL=${{ env.OTP_GITHUB_URL }} --build-arg=ELIXIR_VERSION=${{ env.ELIXIR_VERSION }} --build-arg=ELIXIR_VARIANT=${{ env.ELIXIR_VARIANT }}"
 
     - name: Extract runfile
       run: |
