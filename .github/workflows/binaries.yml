@@ -47,6 +47,9 @@ jobs:
         cd wxWidgets
         git checkout ${{ env.WXWIDGETS_VERSION }}
         git submodule update --init
+        sed -i -r -e 's/wxUSE_POSTSCRIPT +0/wxUSE_POSTSCRIPT 1/' include/wx/msw/setup.h
+        sed -i -r -e 's/wxUSE_WEBVIEW_EDGE +0/wxUSE_WEBVIEW_EDGE 1/' include/wx/msw/setup.h        
+        sed -i -r -e 's/WXWIN_COMPATIBILITY_3_0 +0/WXWIN_COMPATIBILITY_3_0 1/' include/wx/msw/setup.h        
 
     - name: Install WebView2
       if: steps.win32-cache.outputs.cache-hit != 'true'
