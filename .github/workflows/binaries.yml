@@ -123,10 +123,11 @@ jobs:
     - name: Install Elixir
       shell: msys2 {0}
       run: |
-        mkdir $HOME/elixir && cd $HOME/elixir
-        wget https://github.com/elixir-lang/elixir/releases/download/v${{ env.ELIXIR_VERSION }}/Precompiled.zip
-        unzip Precompiled.zip
-        echo export PATH=\"\$PATH:$HOME/elixir/bin\" >> $HOME/.bashrc
+        git clone https://github.com/elixir-lang/elixir.git
+        cd elixir
+        git checkout v${{ env.ELIXIR_VERSION }}
+        make 
+        echo export PATH=\"\$PATH:`pwd`/bin\" >> $HOME/.bashrc
     
     - uses: actions/checkout@v1
     - name: "Compile and Lint"
