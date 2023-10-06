@@ -123,11 +123,12 @@ jobs:
     - name: Install Elixir
       shell: msys2 {0}
       run: |
+        cd $HOME
         git clone https://github.com/elixir-lang/elixir.git
         cd elixir
         git checkout v${{ env.ELIXIR_VERSION }}
         make 
-        echo export PATH=\"\$PATH:`pwd`/bin\" >> $HOME/.bashrc
+        echo export PATH=\"\$PATH:$HOME/elixir/bin\" >> $HOME/.bashrc
     
     - uses: actions/checkout@v1
     - name: "Compile and Lint"
