@@ -145,14 +145,13 @@ jobs:
       run: "subst a: d:\\a"
 
     - name: "Build Release"
-      env:
-        # Environment variables for the build to ensure the msys2 environment is used
-        # and not the windows nmake.exe / cc.exe / ... tools
-        MAKE: make
-        REBAR_TARGET_ARCH_WORDSIZE: 64 
-        REBAR_TARGET_ARCH: x86_64-w64-mingw32 
       shell: msys2 {0}
       run: |
+        # Environment variables for the build to ensure the msys2 environment is used
+        # and not the windows nmake.exe / cc.exe / ... tools
+        export MAKE=make
+        export REBAR_TARGET_ARCH_WORDSIZE=64 
+        export REBAR_TARGET_ARCH=x86_64-w64-mingw32 
         mix assets.deploy
         mix desktop.installer
 
