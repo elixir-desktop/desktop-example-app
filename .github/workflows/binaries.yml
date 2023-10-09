@@ -57,8 +57,8 @@ jobs:
       shell: cmd
       run: |
         cd wxWidgets\\3rdparty
-        nuget install Microsoft.Web.WebView2 -Version 1.0.705.50 -Source https://api.nuget.org/v3/index.json
-        rename Microsoft.Web.WebView2.1.0.705.50 webview2
+        nuget install Microsoft.Web.WebView2 -Version 1.0.864.35 -Source https://api.nuget.org/v3/index.json
+        rename Microsoft.Web.WebView2.1.0.864.35 webview2
 
     - name: Build wxWidgets
       if: steps.win32-cache.outputs.cache-hit != 'true'
