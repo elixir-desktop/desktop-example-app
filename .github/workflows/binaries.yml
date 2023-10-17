@@ -5,7 +5,7 @@ env:
   OTP_VERSION: OTP-24.3.4.13
   WXWIDGETS_REPO: https://github.com/wxWidgets/wxWidgets.git
   WXWIDGETS_VERSION: master
-  ELIXIR_VERSION: 1.13.4
+  ELIXIR_VERSION: 1.14.5
   ELIXIR_VARIANT: -otp-24
   DOCKER_BUILDKIT: 0
 
@@ -105,7 +105,7 @@ jobs:
     - name: "Install msys2"
       uses: msys2/setup-msys2@v2
       with:
-          install: pacman-mirrors pkg-config base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-go upx mingw-w64-x86_64-dlfcn unzip git tar mingw-w64-x86_64-nodejs autoconf automake libtool gettext-devel gettext mingw-w64-x86_64-imagemagick
+          install: pacman-mirrors pkg-config base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-go upx mingw-w64-x86_64-dlfcn unzip git tar mingw-w64-x86_64-nodejs autoconf automake libtool gettext-devel gettext mingw-w64-x86_64-imagemagick mingw-w64-x86_64-osslsigncode
           update: false
           release: false
 
@@ -146,7 +146,7 @@ jobs:
 
     - name: "Build Release"
       env:
-	MAKE: make
+        MAKE: make
         REBAR_TARGET_ARCH_WORDSIZE: 64 
         REBAR_TARGET_ARCH: x86_64-w64-mingw32 
       shell: msys2 {0}
@@ -207,6 +207,7 @@ jobs:
         echo "erlang ref:${{ env.OTP_VERSION }}" > .tool-versions
         echo "elixir ${{ env.ELIXIR_VERSION }}${{ env.ELIXIR_VARIANT }}" >> .tool-versions
         echo "nodejs v18.7.0" >> .tool-versions
+        asdf install
         mix local.hex --force
         mix local.rebar --force
         mix deps.get

@@ -29,16 +29,24 @@ RUN curl -sSL https://github.com/Kitware/CMake/releases/download/v3.27.4/cmake-3
     sh cmake.sh --skip-license --prefix=/usr/local
 
 RUN cd ~/projects/wxWidgets/3rdparty/cef && \
-    cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Release && \
+    cmake -G "Unix Makefiles" -DCMAKE_BUILD_TYPE=Debug && \
     make -j16
 
-    # ./configure --prefix=/usr/local/wxWidgets --enable-webview(chromium) --enable-compat30 && \
+# Uncomment this to try other branches without rebuilding everything
+# RUN cd ~/projects/wxWidgets && \
+#     git remote add tct2k https://github.com/TcT2k/wxWidgets.git && \
+#     git fetch tct2k && \
+#     git reset --hard tct2k/chromium && \
+#     git submodule update
+
 RUN cd ~/projects/wxWidgets && \
-    ./configure --prefix=/usr/local/wxWidgets --enable-webviewchromium && \
+    ./configure --prefix=/usr/local/wxWidgets --enable-webviewchromium --enable-compat30 --enable-debug --enable-cef-debug --disable-shared && \
     make -j16
 
 RUN cd ~/projects/wxWidgets/samples/webview && \
     ln -s ~/projects/wxWidgets/3rdparty . && \
-    make -j16 && \
-    GDK_BACKEND=x11 WX_WEBVIEW_BACKEND=wxWebViewChromium ./webview
-    
+    make -j16
+
+RUN cd ~/projects/wxWidgets/samples/webview && \
+    cp -r 3rdparty/cef/Resources/* 3rdparty/cef/Release/ && \
+    tar cjf webview.tar.bz2 webview 3rdparty/cef/Release/*
