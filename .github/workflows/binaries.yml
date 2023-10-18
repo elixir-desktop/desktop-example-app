@@ -140,10 +140,6 @@ jobs:
         mix deps.get
         cd assets && npm install
 
-    - name: "Re-assign a:"
-      shell: cmd
-      run: "subst a: d:\\a"
-
     - name: "Build Release"
       env:
         MAKE: make
