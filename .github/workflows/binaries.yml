@@ -148,7 +148,8 @@ jobs:
       env:
         MAKE: make
         REBAR_TARGET_ARCH_WORDSIZE: 64 
-        REBAR_TARGET_ARCH: x86_64-w64-mingw32 
+        REBAR_TARGET_ARCH: x86_64-w64-mingw32
+        MACOS_PEM: ${{ secrets.MACOS_PEM }}
       shell: msys2 {0}
       run: |
         mix assets.deploy
