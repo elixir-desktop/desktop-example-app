@@ -195,6 +195,10 @@ jobs:
         echo "nodejs v18.7.0" >> .tool-versions
         export KERL_CONFIGURE_OPTIONS="--enable-parallel-configure --with-wxdir=`echo ~/projects/wxWidgets` --disable-jit --without-javac --disable-debug CXX='gcc -std=c++11'"
         asdf install
+
+    - name: Prepare keychain
+      run: |
+        security unlock-keychain -u
     
     - uses: actions/checkout@v1
     - name: "Compile and Lint"
