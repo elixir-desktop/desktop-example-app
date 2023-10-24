@@ -198,8 +198,11 @@ jobs:
 
     - name: Prepare keychain
       run: |
-        security unlock-keychain -u
-    
+        security create-keychain -p actions macos-build.keychain
+        security default-keychain -s macos-build.keychain
+        security unlock-keychain -p actions macos-build.keychain
+        security set-keychain-settings -t 3600 -u macos-build.keychain
+
     - uses: actions/checkout@v1
     - name: "Compile and Lint"
       run: |
