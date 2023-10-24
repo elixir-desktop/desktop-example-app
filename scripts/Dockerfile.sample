@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:18.04
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Installing wxWidgets
@@ -39,7 +39,10 @@ RUN cd ~/projects/wxWidgets/3rdparty/cef && \
 #     git reset --hard tct2k/chromium && \
 #     git submodule update
 
+RUN apt-get install -y libasound2 libnss3
+
 RUN cd ~/projects/wxWidgets && \
+    git pull && \
     ./configure --prefix=/usr/local/wxWidgets --enable-webviewchromium --enable-compat30 --enable-debug --enable-cef-debug --disable-shared && \
     make -j16
 
