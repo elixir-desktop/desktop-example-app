@@ -61,24 +61,24 @@ defmodule Todo.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     deps_list = [
-      {:ecto_sqlite3, "~> 0.8"},
+      {:ecto_sqlite3, "~> 0.12"},
       {:exqlite, github: "elixir-desktop/exqlite", override: true},
       # {:desktop, path: "../desktop"},
       {:desktop, "~> 1.5"},
 
       # Phoenix
       {:phoenix, "~> 1.7"},
-      {:phoenix_live_view, "~> 0.18"},
-      {:phoenix_html, "~> 3.0"},
+      {:phoenix_live_view, "~> 0.20"},
+      {:phoenix_html, "~> 3.3"},
       {:phoenix_view, "~> 2.0"},
       {:phoenix_live_reload, "~> 1.4", only: [:dev]},
-      {:gettext, "~> 0.22"},
+      {:gettext, "~> 0.23"},
       {:plug_cowboy, "~> 2.6"},
       {:jason, "~> 1.4"},
 
       # Assets
-      {:esbuild, "~> 0.7", runtime: Mix.env() == :dev},
-      {:dart_sass, "~> 0.5", runtime: Mix.env() == :dev},
+      {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
+      {:dart_sass, "~> 0.7", runtime: Mix.env() == :dev},
 
       # Credo
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
