@@ -219,7 +219,7 @@ jobs:
     - name: "Build Release"
       env:
         MACOS_PEM: ${{ secrets.MACOS_PEM }}
-        MACOS_KEYCHAIN: ~/Library/Keychains/macos-build.keychain
+        MACOS_KEYCHAIN: ${{ env.RUNNER_TEMP }}/Library/Keychains/macos-build.keychain
       run: |
         . $HOME/.asdf/asdf.sh
         export LD_LIBRARY_PATH="$HOME/projects/wxWidgets/lib/"
