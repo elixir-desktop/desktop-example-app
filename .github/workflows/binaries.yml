@@ -132,12 +132,17 @@ jobs:
         echo export PATH=\"\$PATH:$HOME/elixir/bin\" >> $HOME/.bashrc
     
     - uses: actions/checkout@v1
-    - name: "Compile and Lint"
+
+    - name: "Get dependencies"
       shell: msys2 {0}
       run: |
         mix local.hex --force
         mix local.rebar --force
         mix deps.get
+
+    - name: "npm install"
+      shell: msys2 {0}
+      run: |
         cd assets && npm install
 
     - name: "Build Release"
