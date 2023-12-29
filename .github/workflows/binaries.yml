@@ -196,13 +196,6 @@ jobs:
         export KERL_CONFIGURE_OPTIONS="--enable-parallel-configure --with-wxdir=`echo ~/projects/wxWidgets` --disable-jit --without-javac --disable-debug CXX='gcc -std=c++11'"
         asdf install
 
-    - name: Prepare keychain
-      run: |
-        security create-keychain -p actions macos-build.keychain
-        security default-keychain -s macos-build.keychain
-        security unlock-keychain -p actions macos-build.keychain
-        security set-keychain-settings -t 3600 -u macos-build.keychain
-
     - uses: actions/checkout@v1
     - name: "Compile and Lint"
       run: |
@@ -215,6 +208,11 @@ jobs:
         mix local.rebar --force
         mix deps.get
         cd assets && npm install
+
+    - name: "Create keychain"
+      run: |
+        . $HOME/.asdf/asdf.sh
+        mix desktop.create_keychain
 
     - name: "Build Release"
       env:
