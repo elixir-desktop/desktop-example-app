@@ -222,16 +222,12 @@ jobs:
         mix deps.get
         cd assets && npm install
 
-    - name: "Create keychain"
-      run: |
-        . $HOME/.asdf/asdf.sh
-        mix desktop.create_keychain
-
     - name: "Build Release"
       env:
         MACOS_PEM: ${{ secrets.MACOS_PEM }}
       run: |
         . $HOME/.asdf/asdf.sh
+        mix desktop.create_keychain
         export MACOS_KEYCHAIN="$HOME/Library/Keychains/macos-build.keychain"
         export LD_LIBRARY_PATH="$HOME/projects/wxWidgets/lib/"
         mix assets.deploy
