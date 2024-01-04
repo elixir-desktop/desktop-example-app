@@ -102,18 +102,10 @@ jobs:
       shell: cmd
       run: C:\\opt\\otp.exe /S
 
-    # - name: "Install msys2"
-    #   uses: msys2/setup-msys2@v2
-    #   with:
-    #       install: pacman-mirrors pkg-config base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-go upx mingw-w64-x86_64-dlfcn unzip git tar mingw-w64-x86_64-nodejs mingw-w64-x86_64-imagemagick mingw-w64-x86_64-osslsigncode autoconf automake libtool gettext-devel gettext
-    #       update: false
-    #       release: false
-
     - name: "Install msys2"
       uses: msys2/setup-msys2@v2
       with:
-          msystem: ucrt64
-          install: pacman-mirrors pkg-config base-devel mingw-w64-ucrt-x86_64-toolchain mingw-w64-ucrt-x86_64-go upx mingw-w64-ucrt-x86_64-dlfcn unzip git tar mingw-w64-ucrt-x86_64-nodejs mingw-w64-ucrt-x86_64-imagemagick mingw-w64-ucrt-x86_64-osslsigncode autoconf automake libtool gettext-devel gettext
+          install: pacman-mirrors pkg-config base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-go upx mingw-w64-x86_64-dlfcn unzip git tar mingw-w64-x86_64-nodejs mingw-w64-x86_64-imagemagick mingw-w64-x86_64-osslsigncode autoconf automake libtool gettext-devel gettext
           update: false
           release: false
 
@@ -143,6 +135,8 @@ jobs:
 
     - name: "Get dependencies"
       shell: msys2 {0}
+      env:
+        ELIXIR_ERL_OPTIONS: "-noinput -noshell"
       run: |
         mix local.hex --force
         mix local.rebar --force
