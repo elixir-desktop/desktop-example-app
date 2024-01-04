@@ -2,7 +2,7 @@ name: "Build binaries"
 on: ["push", "pull_request"]
 env:
   OTP_GITHUB_URL: https://github.com/erlang/otp.git
-  OTP_VERSION: OTP-24.3.4.13
+  OTP_VERSION: OTP-24.3.4.15
   WXWIDGETS_REPO: https://github.com/wxWidgets/wxWidgets.git
   WXWIDGETS_VERSION: master
   ELIXIR_VERSION: 1.14.5
@@ -172,11 +172,6 @@ jobs:
   macos:
     runs-on: macos-11
     steps:
-    # Install general deps
-    - name: "Install brew deps"
-      run: |
-          brew install binutils coreutils wget wxwidgets automake autoconf libtool
-
     - name: macOS Cache
       uses: actions/cache@v3
       id: macos-cache
@@ -184,6 +179,11 @@ jobs:
         path: /Users/runner/.asdf
         key: macos-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}
       
+    - name: "Install brew deps"
+      if: steps.macos-cache.outputs.cache-hit != 'true'
+      run: |
+            brew install binutils coreutils wget automake autoconf libtool
+  
     - name: "Installing wxWidgets"
       if: steps.macos-cache.outputs.cache-hit != 'true'
       run: |
