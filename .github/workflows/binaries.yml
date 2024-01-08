@@ -11,7 +11,7 @@ env:
 
 jobs:
   windows:
-    runs-on: windows-2022
+    runs-on: windows-latest
     timeout-minutes: 90
     defaults:
       run:
@@ -135,8 +135,6 @@ jobs:
 
     - name: "Get dependencies"
       shell: msys2 {0}
-      env:
-        ELIXIR_ERL_OPTIONS: "-noinput -noshell"
       run: |
         mix local.hex --force
         mix local.rebar --force
@@ -152,6 +150,7 @@ jobs:
         MAKE: make
         REBAR_TARGET_ARCH_WORDSIZE: 64 
         REBAR_TARGET_ARCH: x86_64-w64-mingw32
+        WIN32_KEY_PASS: ${{ secrets.WIN32_KEY_PASS }}
       shell: msys2 {0}
       run: |
         mix assets.deploy
@@ -161,7 +160,8 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: Windows-Installer
-        path: _build/prod/*.exe  
+        path: |
+          _build/prod/*.exe
 
   macos:
     runs-on: macos-11
@@ -182,7 +182,7 @@ jobs:
       if: steps.macos-cache.outputs.cache-hit != 'true'
       run: |
         mkdir ~/projects && cd ~/projects
-        git clone https://github.com/wxWidgets/wxWidgets.git
+        git clone ${{ env.WXWIDGETS_REPO }}
         cd wxWidgets; 
         git checkout ${{ env.WXWIDGETS_VERSION }}
         git submodule update --init
@@ -231,9 +231,11 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: MacOS-Installer
-        path: _build/prod/*.dmg
+        path: |
+          _build/prod/*.dmg
 
   linux-x86:
+    permissions: write-all    
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
@@ -245,7 +247,16 @@ jobs:
         registry: docker.pkg.github.com
         image_name: linux_installer
         dockerfile: scripts/Dockerfile
-        build_extra_args: "--build-arg=WXWIDGETS_REPO=${{ env.WXWIDGETS_REPO }} --build-arg=WXWIDGETS_VERSION=${{ env.WXWIDGETS_VERSION }} --build-arg=OTP_VERSION=${{ env.OTP_VERSION }} --build-arg=OTP_GITHUB_URL=${{ env.OTP_GITHUB_URL }} --build-arg=ELIXIR_VERSION=${{ env.ELIXIR_VERSION }} --build-arg=ELIXIR_VARIANT=${{ env.ELIXIR_VARIANT }}"
+        build_extra_args: |
+          --build-arg=BASE_IMAGE=ubuntu:18.04
+          --platform=linux/amd64
+          --build-arg=PLATFORM=amd64
+          --build-arg=WXWIDGETS_REPO=${{ env.WXWIDGETS_REPO }}
+          --build-arg=WXWIDGETS_VERSION=${{ env.WXWIDGETS_VERSION }}
+          --build-arg=OTP_VERSION=${{ env.OTP_VERSION }}
+          --build-arg=OTP_GITHUB_URL=${{ env.OTP_GITHUB_URL }}
+          --build-arg=ELIXIR_VERSION=${{ env.ELIXIR_VERSION }}
+          --build-arg=ELIXIR_VARIANT=${{ env.ELIXIR_VARIANT }}
 
     - name: Extract runfile
       run: |
@@ -258,6 +269,7 @@ jobs:
       uses: actions/upload-artifact@v2
       with:
         name: Linux-Installer
-        path: ./*.run
+        path: |
+          ./*.run
 
   
