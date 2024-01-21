@@ -1,4 +1,4 @@
-name: "CI"
+name: "Lint, test and build"
 on: ["push", "pull_request"]
 
 jobs:
@@ -6,14 +6,12 @@ jobs:
     name: "Build mix release"
     runs-on: "ubuntu-latest"
     steps:
-    - run: |
-        wget https://packages.erlang-solutions.com/erlang-solutions_2.0_all.deb && sudo dpkg -i erlang-solutions_2.0_all.deb
-        sudo apt-get update
-        sudo apt-get install --allow-downgrades esl-erlang=1:24.3.3-1 inotify-tools
-        mkdir $HOME/elixir && cd $HOME/elixir
-        wget https://github.com/elixir-lang/elixir/releases/download/v1.11.4/Precompiled.zip
-        unzip Precompiled.zip
-        echo "$HOME/elixir/bin" >> $GITHUB_PATH
+    - name: Setup elixir
+      uses: erlef/setup-beam@v1
+      with:
+        elixir-version: "1.14.5"
+        otp-version: "24.3.3"
+
     - uses: actions/checkout@v1
     - run: |
         mix local.hex --force
