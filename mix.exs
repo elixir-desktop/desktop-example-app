@@ -1,12 +1,12 @@
 defmodule Todo.MixProject do
   use Mix.Project
 
-  @version "1.1.0"
+  @version "1.2.0"
   def project do
     [
       app: :todo_app,
       version: @version,
-      elixir: "~> 1.10",
+      elixir: "~> 1.14",
       elixirc_paths: elixirc_paths(Mix.env()),
       compilers: Mix.compilers(),
       start_permanent: Mix.env() == :prod,
