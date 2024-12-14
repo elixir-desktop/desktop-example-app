@@ -88,7 +88,7 @@ defmodule Todo.MixProject do
       {:phoenix_live_view, "~> 0.20"},
       {:phoenix_html, "~> 3.3"},
       {:phoenix_view, "~> 2.0"},
-      {:phoenix_live_reload, "~> 1.4", only: [:dev]},
+      {:phoenix_live_reload, "~> 1.5", only: [:dev]},
       {:gettext, "~> 0.23"},
       {:plug_cowboy, "~> 2.6"},
       {:jason, "~> 1.4"},
