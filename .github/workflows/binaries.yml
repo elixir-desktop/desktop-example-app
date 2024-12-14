@@ -157,7 +157,7 @@ jobs:
         mix desktop.installer
 
     - name: Archive Installer
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: Windows-Installer
         path: |
@@ -228,7 +228,7 @@ jobs:
         mix desktop.installer
 
     - name: Archive MacOS Installer
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: MacOS-Installer
         path: |
@@ -266,7 +266,7 @@ jobs:
         chmod +x $NAME
 
     - name: Archive Installer
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: Linux-Installer
         path: |
