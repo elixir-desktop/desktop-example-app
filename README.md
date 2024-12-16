@@ -18,7 +18,7 @@ mix desktop.installer
 
 ## Changes in 1.0
 
-- Updated to Phoenix 1.6 with esbuild+dart_scss
+- Updated to Phoenix 1.6 with esbuild+dart\_scss
 - Added iOS platform example wrapper (see https://github.com/elixir-desktop/ios-example-app)
 - Added Android platform example wrapper (see https://github.com/elixir-desktop/android-example-app)
 
