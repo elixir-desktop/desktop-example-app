@@ -44,7 +44,14 @@ Run:
 cd assets
 npm install
 cd ..
+mix deps.get
 mix assets.deploy
+```
+
+To build binaries locally run:
+
+```bash
+mix desktop.installer
 ```
 
 ## Screenshots
