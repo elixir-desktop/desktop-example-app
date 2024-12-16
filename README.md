@@ -22,18 +22,14 @@ mix desktop.installer
 - Added iOS platform example wrapper (see https://github.com/elixir-desktop/ios-example-app)
 - Added Android platform example wrapper (see https://github.com/elixir-desktop/android-example-app)
 
-## General notes
-
-To run this app you need at least Erlang 24 and recent builds of wxWidgets and at least
-Elixir 1.11.4.
-
 ## Dependencies
 
 This example assumes you've got installed:
 
 - git
-- Elixir, at least 1.11.4
+- Elixir, at least 1.14
 - Erlang, at least OTP 24
+- wxWidgets
 - npm
 - C compiler (make/nmake) for SQLite
 
