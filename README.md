@@ -2,26 +2,6 @@
 
 This application is an example of an Elixir LiveView based desktop application. It uses the elixir-desktop library and a local SQLite database to create a web-technology based desktop app.
 
-## Changes in 1.2
-
-- Added `desktop_deployment` and CI to generate windows+macos+linux binaries
-
-To build binaries locally run:
-
-```bash
-mix desktop.installer
-```
-
-## Changes in 1.1
-
-- Updated to Phoenix 1.7 and LiveView 0.18
-
-## Changes in 1.0
-
-- Updated to Phoenix 1.6 with esbuild+dart\_scss
-- Added iOS platform example wrapper (see https://github.com/elixir-desktop/ios-example-app)
-- Added Android platform example wrapper (see https://github.com/elixir-desktop/android-example-app)
-
 ## Dependencies
 
 This example assumes you've got installed:
