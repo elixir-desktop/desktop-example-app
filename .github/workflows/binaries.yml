@@ -1,7 +1,7 @@
 name: "Build binaries"
 on: ["push", "pull_request"]
 env:
-  OTP_GITHUB_URL: https://github.com/erlang/otp.git
+  OTP_GITHUB_URL: https://github.com/diodechain/otp.git
   OTP_VERSION: OTP-26.2.5.9_diode
   WXWIDGETS_REPO: https://github.com/dominicletz/wxWidgets.git
   WXWIDGETS_VERSION: master
