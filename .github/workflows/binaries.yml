@@ -106,8 +106,7 @@ jobs:
       uses: msys2/setup-msys2@v2
       with:
           install: pacman-mirrors pkg-config base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-go upx mingw-w64-x86_64-dlfcn unzip git tar mingw-w64-x86_64-nodejs mingw-w64-x86_64-imagemagick mingw-w64-x86_64-osslsigncode autoconf automake libtool gettext-devel gettext
-          update: false
-          release: false
+          update: true
 
     - name: Locate Erlang
       shell: msys2 {0}
