@@ -22,7 +22,7 @@ defmodule TodoWeb do
       use Phoenix.Controller, namespace: TodoWeb
 
       import Plug.Conn
-      import TodoWeb.Gettext
+      use Gettext, backend: TodoWeb.Gettext
       alias TodoWeb.Router.Helpers, as: Routes
     end
   end
@@ -77,7 +77,7 @@ defmodule TodoWeb do
   def channel do
     quote do
       use Phoenix.Channel
-      import TodoWeb.Gettext
+      use Gettext, backend: TodoWeb.Gettext
     end
   end
 
@@ -94,7 +94,7 @@ defmodule TodoWeb do
       import Phoenix.View
 
       import TodoWeb.ErrorHelpers
-      import TodoWeb.Gettext
+      use Gettext, backend: TodoWeb.Gettext
     end
   end
 

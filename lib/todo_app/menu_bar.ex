@@ -3,7 +3,7 @@ defmodule TodoApp.MenuBar do
     Menubar that is shown as part of the main Window on Windows/Linux. In
     MacOS this Menubar appears at the very top of the screen.
   """
-  import TodoWeb.Gettext
+  use Gettext, backend: TodoWeb.Gettext
   use Desktop.Menu
   alias TodoApp.Todo
   alias Desktop.Window

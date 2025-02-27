@@ -164,7 +164,7 @@ jobs:
           _build/prod/*.exe
 
   macos:
-    runs-on: macos-12
+    runs-on: macos-13
     steps:
     - name: macOS Cache
       uses: actions/cache@v3
