@@ -3,8 +3,8 @@ on: ["push", "pull_request"]
 env:
   OTP_GITHUB_URL: https://github.com/diodechain/otp.git
   OTP_VERSION: OTP-26.2.5.9_diode
-  WXWIDGETS_REPO: https://github.com/dominicletz/wxWidgets.git
-  WXWIDGETS_VERSION: master
+  WXWIDGETS_REPO: https://github.com/wxWidgets/wxWidgets.git
+  WXWIDGETS_VERSION: v3.2.6
   ELIXIR_VERSION: 1.16.3
   ELIXIR_VARIANT: -otp-26
   DOCKER_BUILDKIT: 0
