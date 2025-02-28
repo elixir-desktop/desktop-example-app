@@ -26,7 +26,7 @@ ARG WXWIDGETS_VERSION
 ENV WXWIDGETS_VERSION=${WXWIDGETS_VERSION:-master}
 RUN cd ~/projects/wxWidgets && \
     git fetch origin && \
-    git reset --hard origin/${WXWIDGETS_VERSION} && \
+    git reset --hard ${WXWIDGETS_VERSION} && \
     git submodule update --init
 
 # ENV WXWIDGETS_DEBUG=--enable-debug

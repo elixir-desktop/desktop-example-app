@@ -5,7 +5,7 @@ defmodule TodoWeb.Gettext do
   By using [Gettext](https://hexdocs.pm/gettext),
   your module gains a set of macros for translations, for example:
 
-      import TodoWeb.Gettext
+      use Gettext, backend: TodoWeb.Gettext
 
       # Simple translation
       gettext("Here is the string to translate")
@@ -20,5 +20,5 @@ defmodule TodoWeb.Gettext do
 
   See the [Gettext Docs](https://hexdocs.pm/gettext) for detailed usage.
   """
-  use Gettext, otp_app: :todo_app
+  use Gettext.Backend, otp_app: :todo_app
 end

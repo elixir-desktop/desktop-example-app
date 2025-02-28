@@ -1,12 +1,12 @@
 name: "Build binaries"
 on: ["push", "pull_request"]
 env:
-  OTP_GITHUB_URL: https://github.com/erlang/otp.git
-  OTP_VERSION: OTP-24.3.4.15
+  OTP_GITHUB_URL: https://github.com/diodechain/otp.git
+  OTP_VERSION: OTP-26.2.5.9_diode
   WXWIDGETS_REPO: https://github.com/wxWidgets/wxWidgets.git
-  WXWIDGETS_VERSION: master
-  ELIXIR_VERSION: 1.14.5
-  ELIXIR_VARIANT: -otp-24
+  WXWIDGETS_VERSION: v3.2.6
+  ELIXIR_VERSION: 1.16.3
+  ELIXIR_VARIANT: -otp-26
   DOCKER_BUILDKIT: 0
 
 jobs:
@@ -106,8 +106,7 @@ jobs:
       uses: msys2/setup-msys2@v2
       with:
           install: pacman-mirrors pkg-config base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-go upx mingw-w64-x86_64-dlfcn unzip git tar mingw-w64-x86_64-nodejs mingw-w64-x86_64-imagemagick mingw-w64-x86_64-osslsigncode autoconf automake libtool gettext-devel gettext
-          update: false
-          release: false
+          update: true
 
     - name: Locate Erlang
       shell: msys2 {0}
@@ -164,7 +163,7 @@ jobs:
           _build/prod/*.exe
 
   macos:
-    runs-on: macos-11
+    runs-on: macos-13
     steps:
     - name: macOS Cache
       uses: actions/cache@v3
