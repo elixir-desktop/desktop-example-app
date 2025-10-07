@@ -76,7 +76,6 @@ defmodule Todo.MixProject do
   defp deps do
     deps_list = [
       {:ecto_sqlite3, "~> 0.12"},
-      {:exqlite, github: "elixir-desktop/exqlite", override: true},
       # {:desktop, path: "../desktop"},
       # {:desktop, "~> 1.5"},
       {:desktop, github: "elixir-desktop/desktop"},
