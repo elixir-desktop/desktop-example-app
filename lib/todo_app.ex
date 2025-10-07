@@ -23,14 +23,24 @@ defmodule TodoApp do
     Desktop.identify_default_locale(TodoWeb.Gettext)
     File.mkdir_p!(config_dir())
 
+    # TODO: move to runtime.exs
     Application.put_env(:todo_app, TodoApp.Repo,
       database: Path.join(config_dir(), "/database.sq3")
     )
 
-    {:ok, sup} = Supervisor.start_link([TodoApp.Repo], name: __MODULE__, strategy: :one_for_one)
-    TodoApp.Repo.initialize()
+    :ets.new(:session, [:named_table, :public, read_concurrency: true])
 
-    {:ok, _} = Supervisor.start_child(sup, TodoWeb.Sup)
+    {:ok, sup} = Supervisor.start_link([
+      TodoWeb.Telemetry,
+      TodoApp.Repo,
+      {DNSCluster, query: Application.get_env(:todo, :dns_cluster_query) || :ignore},
+      {Phoenix.PubSub, name: TodoApp.PubSub},
+      # Start a worker by calling: Todo.Worker.start_link(arg)
+      # {Todo.Worker, arg},
+      # Start to serve requests, typically the last entry
+      TodoWeb.Endpoint
+    ], name: __MODULE__, strategy: :one_for_one)
+    TodoApp.Repo.initialize()
 
     {:ok, _} =
       Supervisor.start_child(sup, {

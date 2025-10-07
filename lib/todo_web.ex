@@ -17,57 +17,13 @@ defmodule TodoWeb do
   and import those modules here.
   """
 
-  def controller do
-    quote do
-      use Phoenix.Controller, namespace: TodoWeb
-
-      import Plug.Conn
-      use Gettext, backend: TodoWeb.Gettext
-      alias TodoWeb.Router.Helpers, as: Routes
-    end
-  end
-
-  def view do
-    quote do
-      use Phoenix.View,
-        root: "lib/todo_web/templates",
-        namespace: TodoWeb
-
-      # Import convenience functions from controllers
-      import Phoenix.Controller,
-        only: [view_module: 1, view_template: 1]
-
-      alias Phoenix.Flash
-
-      # Include shared imports and aliases for views
-      unquote(view_helpers())
-      alias TodoWeb.Router.Helpers, as: Routes
-    end
-  end
-
-  def live_view do
-    quote do
-      use Phoenix.LiveView,
-        layout: {TodoWeb.LayoutView, :live}
-
-      unquote(view_helpers())
-      alias TodoWeb.Router.Helpers, as: Routes
-    end
-  end
-
-  def live_component do
-    quote do
-      use Phoenix.LiveComponent
-
-      unquote(view_helpers())
-      alias TodoWeb.Router.Helpers, as: Routes
-    end
-  end
+  def static_paths, do: ~w(assets fonts images favicon.ico robots.txt)
 
   def router do
     quote do
-      use Phoenix.Router
+      use Phoenix.Router, helpers: false
 
+      # Import common connection and controller functions to use in pipelines
       import Plug.Conn
       import Phoenix.Controller
       import Phoenix.LiveView.Router
@@ -77,24 +33,75 @@ defmodule TodoWeb do
   def channel do
     quote do
       use Phoenix.Channel
-      use Gettext, backend: TodoWeb.Gettext
     end
   end
 
-  defp view_helpers do
+  def controller do
     quote do
-      # Use all HTML functionality (forms, tags, etc)
-      use Phoenix.HTML
+      use Phoenix.Controller, formats: [:html, :json]
 
-      # Import LiveView helpers (live_render, live_component, live_patch, etc)
-      import Phoenix.LiveView.Helpers
-      import Phoenix.Component
-
-      # Import basic rendering functionality (render, render_layout, etc)
-      import Phoenix.View
-
-      import TodoWeb.ErrorHelpers
       use Gettext, backend: TodoWeb.Gettext
+
+      import Plug.Conn
+
+      unquote(verified_routes())
+    end
+  end
+
+  def live_view do
+    quote do
+      use Phoenix.LiveView
+
+      unquote(html_helpers())
+    end
+  end
+
+  def live_component do
+    quote do
+      use Phoenix.LiveComponent
+
+      unquote(html_helpers())
+    end
+  end
+
+  def html do
+    quote do
+      use Phoenix.Component
+
+      # Import convenience functions from controllers
+      import Phoenix.Controller,
+        only: [get_csrf_token: 0, view_module: 1, view_template: 1]
+
+      # Include general helpers for rendering HTML
+      unquote(html_helpers())
+    end
+  end
+
+  defp html_helpers do
+    quote do
+      # Translation
+      use Gettext, backend: TodoWeb.Gettext
+
+      # HTML escaping functionality
+      import Phoenix.HTML
+      # Core UI components
+      import TodoWeb.CoreComponents
+
+      # Common modules used in templates
+      alias Phoenix.LiveView.JS
+      alias TodoWeb.Layouts
+
+      # Routes generation with the ~p sigil
+      unquote(verified_routes())
+    end
+  end
+
+  def verified_routes do
+    quote do
+      use Phoenix.VerifiedRoutes,
+        endpoint: TodoWeb.Endpoint,
+        router: TodoWeb.Router,
+        statics: TodoWeb.static_paths()
     end
   end
 

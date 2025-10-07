@@ -16,15 +16,15 @@ defmodule TodoApp.MenuBar do
         <item
             type="checkbox" onclick={"toggle:#{item.id}"}
             checked={item.status == "done"}
-            ><%= item.text %></item>
+            >{item.text}</item>
         <% end %>
         <hr/>
-        <item onclick="quit"><%= gettext "Quit" %></item>
+        <item onclick="quit">{gettext "Quit"}</item>
     </menu>
     <menu label={gettext "Extra"}>
-        <item onclick="notification"><%= gettext "Show Notification" %></item>
-        <item onclick="observer"><%= gettext "Show Observer" %></item>
-        <item onclick="browser"><%= gettext "Open Browser" %></item>
+        <item onclick="notification">{gettext "Show Notification"}</item>
+        <item onclick="observer">{gettext "Show Observer"}</item>
+        <item onclick="browser">{gettext "Open Browser"}</item>
     </menu>
     </menubar>
     """

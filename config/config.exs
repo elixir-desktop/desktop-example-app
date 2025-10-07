@@ -1,17 +1,18 @@
 import Config
 
 config :esbuild,
-  version: "0.12.18",
+  version: "0.25.4",
   default: [
-    args: ~w(js/app.js --bundle --target=es2016 --outdir=../priv/static/assets),
+    args:
+      ~w(js/app.js --bundle --target=es2022  --outdir=../priv/static/assets/js --external:/fonts/* --external:/images/* --alias:@=.),
     cd: Path.expand("../assets", __DIR__),
-    env: %{"NODE_PATH" => Path.expand("../deps", __DIR__)}
+    env: %{"NODE_PATH" => [Path.expand("../deps", __DIR__), Mix.Project.build_path()]}
   ]
 
 config :dart_sass,
   version: "1.61.0",
   default: [
-    args: ~w(css/app.scss ../priv/static/assets/app.css),
+    args: ~w(css/app.scss ../priv/static/assets/css/app.css),
     cd: Path.expand("../assets", __DIR__)
   ]
 
@@ -27,12 +28,17 @@ config :logger, :console,
 
 # Configures the endpoint
 config :todo_app, TodoWeb.Endpoint,
+  # url: [host: "localhost", port: 10_000 + :rand.uniform(45_000)],
   # because of the iOS rebind - this is now a fixed port, but randomly selected
   http: [ip: {127, 0, 0, 1}, port: 10_000 + :rand.uniform(45_000)],
-  render_errors: [view: TodoWeb.ErrorView, accepts: ~w(html json), layout: false],
+  adapter: Bandit.PhoenixAdapter,
+  render_errors: [
+    formats: [html: TodoWeb.ErrorHTML, json: TodoWeb.ErrorJSON],
+    layout: false
+  ],
   pubsub_server: TodoApp.PubSub,
   live_view: [signing_salt: "sWpG9ljX"],
-  secret_key_base: :crypto.strong_rand_bytes(32),
+  secret_key_base: :crypto.strong_rand_bytes(64),
   server: true
 
 config :phoenix, :json_library, Jason
