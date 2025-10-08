@@ -30,16 +30,22 @@ defmodule TodoApp do
 
     :ets.new(:session, [:named_table, :public, read_concurrency: true])
 
-    {:ok, sup} = Supervisor.start_link([
-      TodoWeb.Telemetry,
-      TodoApp.Repo,
-      {DNSCluster, query: Application.get_env(:todo, :dns_cluster_query) || :ignore},
-      {Phoenix.PubSub, name: TodoApp.PubSub},
-      # Start a worker by calling: Todo.Worker.start_link(arg)
-      # {Todo.Worker, arg},
-      # Start to serve requests, typically the last entry
-      TodoWeb.Endpoint
-    ], name: __MODULE__, strategy: :one_for_one)
+    {:ok, sup} =
+      Supervisor.start_link(
+        [
+          TodoWeb.Telemetry,
+          TodoApp.Repo,
+          {DNSCluster, query: Application.get_env(:todo, :dns_cluster_query) || :ignore},
+          {Phoenix.PubSub, name: TodoApp.PubSub},
+          # Start a worker by calling: Todo.Worker.start_link(arg)
+          # {Todo.Worker, arg},
+          # Start to serve requests, typically the last entry
+          TodoWeb.Endpoint
+        ],
+        name: __MODULE__,
+        strategy: :one_for_one
+      )
+
     TodoApp.Repo.initialize()
 
     {:ok, _} =
