@@ -7,6 +7,29 @@ defmodule TodoWeb.TodoLive do
 
   @impl true
 
+  def render(assigns) do
+    ~H"""
+    <div class="header">
+      <h2>{gettext "My Todo List"}</h2>
+      <form phx-submit="add">
+        <input type="text" name="text" placeholder={gettext "Add new todo item..."} />
+        <button type="submit">&#8617;</button>
+      </form>
+    </div>
+
+    <ul>
+      <%= for item <- @todos do %>
+      <li phx-click="toggle" phx-value-id={item.id}class={item.status}
+        >{item.text}
+        <span class="close" phx-click="drop" phx-value-id={item.id}>&#215;</span>
+        </li>
+      <% end %>
+    </ul>
+    """
+  end
+
+  @impl true
+
   def mount(_args, _session, socket) do
     todos = TodoApp.Todo.all_todos()
     TodoApp.Todo.subscribe()
