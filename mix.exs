@@ -87,6 +87,7 @@ defmodule Todo.MixProject do
       # {:desktop, "~> 1.5"},
       {:desktop, github: "elixir-desktop/desktop"},
       {:desktop_deployment, github: "elixir-desktop/deployment"},
+      {:igniter, "~> 0.6"},
       # {:desktop_deployment, path: "../deployment", runtime: false},
 
       # Phoenix
