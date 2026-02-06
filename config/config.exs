@@ -28,9 +28,7 @@ config :logger, :console,
 
 # Configures the endpoint
 config :todo_app, TodoWeb.Endpoint,
-  # url: [host: "localhost", port: 10_000 + :rand.uniform(45_000)],
-  # because of the iOS rebind - this is now a fixed port, but randomly selected
-  http: [ip: {127, 0, 0, 1}, port: 10_000 + :rand.uniform(45_000)],
+  http: [ip: {127, 0, 0, 1}, port: 30_979],
   adapter: Bandit.PhoenixAdapter,
   render_errors: [
     formats: [html: TodoWeb.ErrorHTML, json: TodoWeb.ErrorJSON],

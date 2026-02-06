@@ -16,6 +16,54 @@ body.ios {
     padding: 1em;
 }
 
+.header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5em;
+
+    h2 {
+        margin: 0;
+        flex: 1;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+    }
+
+    form {
+        display: flex;
+        align-items: center;
+        gap: 0.2em;
+    }
+
+    padding-bottom: 1em;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+}
+
+.icon-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 5px;
+    padding: 0.35em 0.5em;
+    font-size: 1.2em;
+    cursor: pointer;
+    line-height: 1;
+    min-height: 2em;
+    box-sizing: border-box;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.3);
+    }
+}
+
 h2 {
     text-align: left;
     color: white;
@@ -32,7 +80,7 @@ input {
     font-size: 16px;
 }
   
-button {
+form button {
     padding: 10px;
     width: 25%;
     border-radius: 5px;
@@ -50,7 +98,7 @@ button {
 form {
     display: flex;
     justify-content: stretch;
-    padding-bottom: 2em;
+    align-items: center;
 }
 
 ul {
@@ -97,5 +145,68 @@ li {
     &:hover {
         background-color: #f44336;
         color: white;
+    }
+}
+
+.log-view {
+    h3 {
+        color: white;
+        margin-top: 0.5em;
+    }
+}
+
+.back-btn {
+    background: #555;
+    color: white;
+    border: 1px solid #666;
+    border-radius: 5px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-bottom: 1em;
+
+    &:hover {
+        background: #666;
+    }
+}
+
+.log-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.log-day-separator {
+    color: white;
+    font-size: 0.95em;
+    font-weight: 600;
+    padding: 0.6em 12px 0.3em;
+    margin-top: 0.75em;
+    cursor: default;
+    background: transparent;
+    list-style: none;
+
+    &:first-child {
+        margin-top: 0;
+    }
+}
+
+.log-entry {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: #f9f9f9;
+    border-radius: 5px;
+    margin: 0.3em 0;
+    cursor: default;
+
+    .log-text {
+        flex: 1;
+    }
+    .log-date {
+        color: #777;
+        font-size: 0.9em;
+        margin-left: 1em;
     }
 }

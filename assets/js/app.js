@@ -11,13 +11,34 @@ import "phoenix_html"
 import {Socket} from "phoenix"
 import {LiveSocket} from "phoenix_live_view"
 
-let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-let liveSocket = new LiveSocket("/live", Socket, {params: {_csrf_token: csrfToken}})
+let csrfToken = (function() {
+  let meta = document.querySelector("meta[name='csrf-token']")
+  if (!meta) {
+    console.error("[LiveView] Missing meta[name='csrf-token'] – check your root layout. Clicks will not work.")
+    return ""
+  }
+  let token = meta.getAttribute("content")
+  if (token == null || token === "") {
+    console.error("[LiveView] csrf-token meta is empty. Clicks may not work.")
+    return ""
+  }
+  return token
+})()
 
-// connect if there are any LiveViews on the page
-liveSocket.connect()
+let Hooks = {}
+try {
+  let liveSocket = new LiveSocket("/live", Socket, {
+    params: {_csrf_token: csrfToken},
+    hooks: Hooks
+  })
 
-// expose liveSocket on window for web console debug logs and latency simulation:
-// >> liveSocket.enableDebug()
-// >> liveSocket.enableLatencySim(1000)
-window.liveSocket = liveSocket
+  // connect if there are any LiveViews on the page
+  liveSocket.connect()
+
+  // expose liveSocket on window for web console debug logs and latency simulation:
+  // >> liveSocket.enableDebug()
+  // >> liveSocket.enableLatencySim(1000)
+  window.liveSocket = liveSocket
+} catch (err) {
+  console.error("[LiveView] Failed to start:", err)
+}

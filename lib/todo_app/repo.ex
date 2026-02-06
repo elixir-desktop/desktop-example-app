@@ -9,5 +9,13 @@ defmodule TodoApp.Repo do
           status TEXT
         )
     """)
+
+    Ecto.Adapters.SQL.query!(__MODULE__, """
+        CREATE TABLE IF NOT EXISTS completed_tasks_log (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          text TEXT NOT NULL,
+          completed_at TEXT NOT NULL
+        )
+    """)
   end
 end

@@ -47,6 +47,10 @@ defmodule TodoWeb.Endpoint do
   plug Plug.Head
 
   plug Plug.Session, @session_options
-  plug Desktop.Auth
+
+  if not code_reloading? do
+    plug Desktop.Auth
+  end
+
   plug TodoWeb.Router
 end

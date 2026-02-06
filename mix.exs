@@ -40,17 +40,22 @@ defmodule Todo.MixProject do
   def application do
     [
       mod: {TodoApp, []},
-      extra_applications: [
-        :logger,
-        :runtime_tools,
-        :ssl,
-        :crypto,
-        :sasl,
-        :tools,
-        :inets | extra_applications(Mix.target())
-      ]
+      extra_applications:
+        [
+          :logger,
+          :runtime_tools,
+          :ssl,
+          :crypto,
+          :sasl,
+          :tools,
+          :inets
+        ] ++ extra_applications(Mix.target()) ++ asset_apps(Mix.env())
     ]
   end
+
+  # Ensure asset tooling is started in dev so Endpoint watchers (esbuild, sass) can run.
+  defp asset_apps(:dev), do: [:esbuild, :dart_sass]
+  defp asset_apps(_), do: []
 
   def extra_applications(:host) do
     [:observer]

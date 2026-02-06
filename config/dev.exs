@@ -10,6 +10,7 @@ config :todo_app, TodoWeb.Endpoint,
   debug_errors: true,
   code_reloader: true,
   check_origin: false,
+  force_watchers: true,
   watchers: [
     esbuild: {Esbuild, :install_and_run, [:default, ~w(--sourcemap=inline --watch)]},
     sass:
