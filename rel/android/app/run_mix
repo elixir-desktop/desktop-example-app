@@ -16,15 +16,18 @@ APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$APP_DIR/../../.." && pwd)"
 APP_FILE="$APP_DIR/src/main/assets/app.zip"
 
-# The pre-built Erlang runtime embedded in the APK is ABI-locked to a specific
-# Erlang/OTP release. Pin Elixir/Erlang/Node to the versions declared in the
-# adjacent .tool-versions file so the parent project's own .tool-versions (used
-# for desktop builds) doesn't bleed in.
+# Make asdf shims available even when launched from a non-login Gradle
+# subprocess that hasn't sourced ~/.asdf/asdf.sh.
 if [ -d "$HOME/.asdf/shims" ]; then
     export PATH="$HOME/.asdf/shims:$PATH"
 fi
 
-if [ -f "$APP_DIR/.tool-versions" ]; then
+# The embedded Android runtime is ABI-locked to a specific Erlang/OTP release,
+# so pin the toolchain to the versions declared in the adjacent .tool-versions
+# file. Only do this when asdf is available; users with their own
+# Erlang/Elixir/Node on $PATH (e.g. CI using setup-beam) fall through.
+if command -v asdf >/dev/null 2>&1 && [ -f "$APP_DIR/.tool-versions" ]; then
+    missing_tools=()
     while IFS= read -r line || [ -n "$line" ]; do
         case "$line" in
             ''|\#*) continue ;;
@@ -33,7 +36,26 @@ if [ -f "$APP_DIR/.tool-versions" ]; then
         version=${line#* }
         upper=$(echo "$tool" | tr '[:lower:]' '[:upper:]')
         export "ASDF_${upper}_VERSION=$version"
+        if ! asdf where "$tool" "$version" >/dev/null 2>&1; then
+            missing_tools+=("$tool")
+        fi
     done < "$APP_DIR/.tool-versions"
+
+    if [ ${#missing_tools[@]} -gt 0 ]; then
+        echo ">>> One or more pinned Erlang/Elixir/Node versions for the Android" >&2
+        echo ">>> wrapper are not installed. Bootstrapping them with 'asdf install'." >&2
+        echo ">>> Building Erlang/OTP from source can take 10-30 minutes on first run." >&2
+
+        installed_plugins=$(asdf plugin list 2>/dev/null || true)
+        for tool in "${missing_tools[@]}"; do
+            if ! printf '%s\n' "$installed_plugins" | grep -qx "$tool"; then
+                echo ">>> Adding asdf plugin: $tool" >&2
+                asdf plugin add "$tool"
+            fi
+        done
+
+        (cd "$APP_DIR" && asdf install)
+    fi
 fi
 
 export MIX_ENV=prod
@@ -41,11 +63,9 @@ export MIX_TARGET=android
 
 cd "$PROJECT_ROOT"
 
-if [ ! -d "deps/desktop" ]; then
-    mix local.hex --force
-    mix local.rebar --force
-    mix deps.get
-fi
+mix local.hex --force --if-missing
+mix local.rebar --force --if-missing
+mix deps.get
 
 if [ ! -d "assets/node_modules" ]; then
     (cd assets && npm install)

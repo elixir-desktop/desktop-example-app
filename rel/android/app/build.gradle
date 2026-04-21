@@ -5,7 +5,7 @@ plugins {
 
 android {
     namespace 'io.elixirdesktop.example'
-    compileSdk 33
+    compileSdk 34
 
     task buildNum(type: Exec, description: 'Build Elixir release into src/main/assets/app.zip') {
         commandLine './run_mix'
