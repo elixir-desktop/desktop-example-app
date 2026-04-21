@@ -6,6 +6,11 @@
 *.gz
 .DS_Store
 
+# The Android sample wrapper ships a pre-built Erlang runtime per ABI as
+# tracked binaries, so allow those zip files through the *.zip ignore above.
+!/rel/android/app/src/main/assets/*-runtime.zip
+!/rel/android/app/src/main/assets/*-nif-*.zip
+
 # The directory Mix will write compiled artifacts to.
 /_build/
 

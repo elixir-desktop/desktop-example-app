@@ -1,0 +1,60 @@
+#!/bin/bash
+# Build the Elixir release for the Android target and package it as
+# rel/android/app/src/main/assets/app.zip so Bridge.kt can extract it on the
+# first launch.
+#
+# Invoked from rel/android/app/build.gradle (Gradle's working directory is
+# rel/android/app/) and indirectly from scripts/build_android.sh.
+#
+# The Elixir source code lives in this repository's root (../../.. from this
+# script). No git checkout happens any more; the script always builds the
+# parent project as-is.
+
+set -euo pipefail
+
+APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$APP_DIR/../../.." && pwd)"
+APP_FILE="$APP_DIR/src/main/assets/app.zip"
+
+# The pre-built Erlang runtime embedded in the APK is ABI-locked to a specific
+# Erlang/OTP release. Pin Elixir/Erlang/Node to the versions declared in the
+# adjacent .tool-versions file so the parent project's own .tool-versions (used
+# for desktop builds) doesn't bleed in.
+if [ -d "$HOME/.asdf/shims" ]; then
+    export PATH="$HOME/.asdf/shims:$PATH"
+fi
+
+if [ -f "$APP_DIR/.tool-versions" ]; then
+    while IFS= read -r line || [ -n "$line" ]; do
+        case "$line" in
+            ''|\#*) continue ;;
+        esac
+        tool=${line%% *}
+        version=${line#* }
+        upper=$(echo "$tool" | tr '[:lower:]' '[:upper:]')
+        export "ASDF_${upper}_VERSION=$version"
+    done < "$APP_DIR/.tool-versions"
+fi
+
+export MIX_ENV=prod
+export MIX_TARGET=android
+
+cd "$PROJECT_ROOT"
+
+if [ ! -d "deps/desktop" ]; then
+    mix local.hex --force
+    mix local.rebar --force
+    mix deps.get
+fi
+
+if [ ! -d "assets/node_modules" ]; then
+    (cd assets && npm install)
+fi
+
+rm -f "$APP_FILE"
+
+mix assets.deploy
+mix release --overwrite
+
+cd "_build/${MIX_TARGET}_${MIX_ENV}/rel/default_release"
+zip -9r "$APP_FILE" lib/ releases/ --exclude "*.so"
