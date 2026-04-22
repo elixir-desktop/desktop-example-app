@@ -17,6 +17,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v5
+      with:
+        # The embedded Erlang runtime and a couple of jars in rel/android/ are
+        # tracked through Git LFS; without this the binaries would be checked
+        # out as ~130 byte pointer files and the APK build would fail.
+        lfs: true
 
     - name: Set up Elixir/Erlang (matching embedded runtime)
       uses: erlef/setup-beam@v1

@@ -6,6 +6,8 @@ This Android Studio project wraps the [Desktop Sample App](https://github.com/el
 
 The pre-built Erlang runtime for Android ARM/ARM64/x86_64 is committed in `app/src/main/assets/*-runtime.zip` (and the matching `*-nif-exqlite.zip` files). These native runtime files include Erlang/OTP and the exqlite NIF and are produced by the CI of the [Desktop Runtime](https://github.com/elixir-desktop/runtimes) repository.
 
+> **Git LFS required.** All `*.zip` and `*.jar` files in this folder (the runtime/NIF blobs, `app/libs/erlang.jar`, and the gradle wrapper jar) are tracked through [Git LFS](https://git-lfs.com/). Install it once (`apt install git-lfs` / `brew install git-lfs`) and then run `git lfs install` in your clone — otherwise these files will appear as ~130 byte text pointers and the APK build will fail.
+
 Because Erlang/OTP has many native hooks for networking and cryptography, the Erlang version used to compile the BEAM bytecode embedded in the APK MUST match the bundled runtime. In this sample that is **Erlang/OTP 26.2.5** with **Elixir 1.17.2-otp-26**. The version requirement is encoded in `app/.tool-versions`; `app/run_mix` reads it and exports the matching `ASDF_*_VERSION` environment variables before invoking `mix release`, so the parent repository's own `.tool-versions` (used for desktop builds with a newer OTP) is not picked up by accident.
 
 ## Building from the command line
