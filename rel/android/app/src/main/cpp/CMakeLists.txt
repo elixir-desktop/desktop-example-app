@@ -15,6 +15,18 @@ project("example")
 # Gradle automatically packages shared libraries with your APK.
 
 add_library(native-lib SHARED native-lib.cpp)
+if(${ANDROID_ABI} STREQUAL "armeabi-v7a")
+    add_library(erlang STATIC IMPORTED)
+    set_target_properties(erlang PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/../libs/armeabi-v7a/liberlang.a)
+elseif(${ANDROID_ABI} STREQUAL "arm64-v8a") 
+    add_library(erlang STATIC IMPORTED)
+    set_target_properties(erlang PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/../libs/arm64-v8a/liberlang.a)
+elseif(${ANDROID_ABI} STREQUAL "x86_64")
+    add_library(erlang STATIC IMPORTED)
+    set_target_properties(erlang PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/../libs/x86_64/liberlang.a)
+endif()
+
+target_link_libraries(native-lib erlang)
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by

@@ -3,12 +3,16 @@
 #include <thread>
 #include <unistd.h>
 #include <dlfcn.h>
+#include <android/log.h>
 
 std::string jstring2string(JNIEnv *env, jstring jStr);
 int start_logger();
 static void logger_func();
 static std::string log_file;
-void (*startfun)(int argc, char **argv);
+
+extern "C" {
+extern void erl_start(int argc, char **argv);
+}
 
 void ensure_slash(std::string& str)
 {
@@ -17,27 +21,36 @@ void ensure_slash(std::string& str)
     }
 }
 
-void test_nif(std::string nif)
+bool write_inetrc(std::string& root_dir)
 {
-    void* lib = dlopen(nif.c_str(), RTLD_NOW);
-    if (!lib) {
-        printf("Failed opening %s: %s\n", nif.c_str(), dlerror());
-        return;
-    }
+    std::string inetrc = root_dir + "inetrc";
+    static std::string env = "ERL_INETRC=" + inetrc;
+    putenv((char *)env.c_str());
 
-    void* sym = dlsym(lib, "nif_init");
-    printf("%s: nif_init() => %lx\n", nif.c_str(), sym);
-
-    // dlclose(lib);
+    FILE *fp = fopen(inetrc.c_str(), "w");
+    if (!fp) return false;
+    fprintf(fp, "%% enable EDNS, 0 means enable YES!\n");
+    fprintf(fp, "{edns,0}.\n");
+    fprintf(fp, "{alt_nameserver, {8,8,8,8}}.\n");
+    fprintf(fp, "%% specify lookup method\n");
+    fprintf(fp, "{lookup, [dns]}.\n");
+    fclose(fp);
+    return true;
 }
 
 #define ERROR(x) { printf(x); return x; }
-
 const char* startErlang(std::string root_dir, std::string log_dir)
 {
+    // Startup timing: measure BEAM VM initialization
+    __android_log_print(ANDROID_LOG_INFO, "STARTUP_NATIVE", "startErlang begin");
+
     ensure_slash(root_dir);
     ensure_slash(log_dir);
     log_file = log_dir + "elixir.log";
+
+    if (!write_inetrc(root_dir)) {
+        ERROR("Could not write inetrc");
+    }
 
     std::string boot_file = root_dir + "releases/start_erl.data";
     FILE *fp = fopen(boot_file.c_str(), "rb");
@@ -66,46 +79,39 @@ const char* startErlang(std::string root_dir, std::string log_dir)
 
     start_logger();
 
-    std::string liberlang = getenv("LIBERLANG");
-
-    // RTLD_GLOBAL does not work on android
-    // https://android-ndk.narkive.com/iNWj05IV/weak-symbol-linking-when-loading-dynamic-libraries
-    // https://android.googlesource.com/platform/bionic/+/30b17e32f0b403a97cef7c4d1fcab471fa316340/linker/linker_namespaces.cpp#100
-    void* lib = dlopen(liberlang.c_str(), RTLD_NOW | RTLD_GLOBAL);
-    if (!lib) ERROR("Failed opening liberlang.so\n")
-
-    // std::string nif = root_dir + "lib/exqlite-0.5.1/priv/sqlite3_nif.so";
-    // test_nif(nif);
-
-    startfun = (void (*)(int, char**)) dlsym(lib, "erl_start");
-    if (!startfun) ERROR("Failed loading erlang startfun\n")
-
     std::string config_path = root_dir + "releases/" + app_version + "/sys";
     std::string boot_path = root_dir + "releases/" + app_version + "/start";
     std::string lib_path = root_dir + "lib";
     std::string home_dir;
+    std::string update_dir;
+
     if (const char* h = getenv("HOME")) {
         home_dir = h;
     } else {
         home_dir = root_dir + "home";
     }
-    std::string update_dir;
+    
     if (const char *u = getenv("UPDATE_DIR")) {
         update_dir = u;
     } else {
         update_dir = root_dir + "update";
     }
+    ensure_slash(update_dir);
 
     const char *args[] = {
             "test_main",
+            "-sssdio",
+            "128",
             "-sbwt",
             "none",
-            // Reduced literal super carrier to 10mb because of spurious error message on 9th gen iPads
+            // Reduced literal super carrier to 40mb because of spurious error message on 9th gen iPads
             // "erts_mmap: Failed to create super carrier of size 1024 MB"
             "-MIscs",
-            "10",
+            "40",
             "--",
             // "-init_debug",
+            "-bindir",
+            bin_dir.c_str(),
             "-root",
             root_dir.c_str(),
             "-progname",
@@ -119,8 +125,6 @@ const char* startErlang(std::string root_dir, std::string log_dir)
             "enabled",
             "--",
             // "-heart",
-            "-pa",
-            update_dir.c_str(),
             "-start_epmd",
             "false",
             //"-kernel",
@@ -139,20 +143,24 @@ const char* startErlang(std::string root_dir, std::string log_dir)
             config_path.c_str(),
             "-boot",
             boot_path.c_str(),
-            "-bindir",
-            bin_dir.c_str(),
             "-boot_var",
             "RELEASE_LIB",
             lib_path.c_str(),
             "--",
+            "-pa",
+            update_dir.c_str(),
+            "-shutdown_time",
+            "0",
             "--",
+            "--",
+            //"-code_path_choice",
+            //"strict",
             "-extra",
             "--no-halt",
     };
 
-    // std::thread erlang(run_erlang);
-    // erlang.detach();
-    startfun(sizeof(args) / sizeof(args[0]), (char **)args);
+    __android_log_print(ANDROID_LOG_INFO, "STARTUP_NATIVE", "calling erl_start");
+    erl_start(sizeof(args) / sizeof(args[0]), (char **)args);
     return "ok";
 }
 
@@ -185,8 +193,6 @@ std::string jstring2string(JNIEnv *env, jstring jStr) {
     return ret;
 }
 
-
-#include <android/log.h>
 
 static int pfd[2];
 static const char *tag = "BEAM";

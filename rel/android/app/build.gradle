@@ -1,13 +1,13 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'org.jetbrains.kotlin.plugin.compose'
 }
 
 android {
-    namespace 'io.elixirdesktop.example'
-    compileSdk 34
+    compileSdkVersion 36
 
-    task buildNum(type: Exec, description: 'Build Elixir release into src/main/assets/app.zip') {
+    tasks.register('buildNum', Exec) {
         commandLine './run_mix'
     }
 
@@ -15,11 +15,10 @@ android {
         compileTask -> compileTask.dependsOn buildNum
     }
 
-
     defaultConfig {
         applicationId "io.elixirdesktop.example"
         minSdk 29
-        targetSdk 33
+        targetSdkVersion defaultTargetSdkVersion
         versionCode 1
         versionName "1.0"
 
@@ -42,36 +41,57 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = '1.8'
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(17)
+        }
     }
     externalNativeBuild {
         cmake {
             path file('src/main/cpp/CMakeLists.txt')
-            version '3.22.1'
         }
     }
     buildFeatures {
         viewBinding true
+        compose true
+        buildConfig true
     }
     packagingOptions {
         jniLibs {
             useLegacyPackaging = true
         }
+        resources {
+            excludes += ['META-INF/DEPENDENCIES', 'META-INF/DISCLAIMER', 'META-INF/LICENSE', 'META-INF/LICENSE.txt', 'META-INF/license.txt', 'META-INF/NOTICE', 'META-INF/NOTICE.txt', 'META-INF/notice.txt', 'META-INF/ASL2.0', 'META-INF/*.kotlin_module']
     }
+}
+    namespace 'io.elixirdesktop.example'
+    ndkVersion '29.0.14206865'
+    buildToolsVersion '36.1.0'
 }
 
 dependencies {
     implementation fileTree(dir: "libs", include: '*.jar')
 
-    implementation 'androidx.core:core-ktx:1.9.0'
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.8.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.core:core-ktx:1.15.0'
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.0'
+
+    // Compose dependencies
+    def composeBom = platform('androidx.compose:compose-bom:2024.12.01')
+    implementation composeBom
+    androidTestImplementation composeBom
+
+    implementation 'androidx.compose.ui:ui'
+    implementation 'androidx.compose.ui:ui-graphics'
+    implementation 'androidx.compose.ui:ui-tooling-preview'
+    implementation 'androidx.compose.material3:material3'
+    implementation 'androidx.activity:activity-compose:1.9.3'
+
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.5'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.5.1'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.6.1'
 }

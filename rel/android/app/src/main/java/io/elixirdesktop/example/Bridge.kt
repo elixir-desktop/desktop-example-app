@@ -105,7 +105,6 @@ class Bridge(private val applicationContext : Context, private var webview : Web
             val packageInfo = applicationContext.packageManager
                 .getPackageInfo(applicationContext.packageName, 0)
 
-            val nativeDir = packageInfo.applicationInfo.nativeLibraryDir
             val lastUpdateTime = (packageInfo.lastUpdateTime / 1000).toString()
 
             val releaseDir = applicationContext.filesDir.absolutePath + "/app"
@@ -127,20 +126,10 @@ class Bridge(private val applicationContext : Context, private var webview : Web
 
             Os.setenv("UPDATE_DIR", "$releaseDir/update/", false)
             Os.setenv("BINDIR", binDir, false)
-            Os.setenv("LIBERLANG", "$nativeDir/liberlang.so", false)
 
             if (!doneFile.exists()) {
                 File(binDir).mkdirs()
-                if (unpackAsset(releaseDir, "app") &&
-                        unpackAsset(releaseDir, runtime)) {
-                    for (lib in File("$releaseDir/lib").list()!!) {
-                        val parts = lib.split("-")
-                        val name = parts[0]
-
-                        val nif = "$prefix-nif-$name"
-                        unpackAsset("$releaseDir/lib/$lib/priv", nif)
-                    }
-
+                if (unpackAsset(releaseDir, "app")) {
                     doneFile.writeText(lastUpdateTime)
                 }
             }
@@ -148,20 +137,6 @@ class Bridge(private val applicationContext : Context, private var webview : Web
             if (!doneFile.exists()) {
                 Log.e("ERROR", "Failed to extract runtime")
                 throw Exception("Failed to extract runtime")
-            }
-
-            // Creating symlinks for binaries
-            // Re-creating even on relaunch because we can't
-            // be sure of the native libs directory
-            // https://github.com/JeromeDeBretagne/erlanglauncher/issues/2
-            for (file in File(nativeDir).list()!!) {
-                if (file.startsWith("lib__")) {
-                    var name = File(file).name
-                    name = name.substring(5, name.length - 3)
-                    Log.d("BIN", "$nativeDir/$file -> $binDir/$name")
-                    File("$binDir/$name").delete()
-                    Os.symlink("$nativeDir/$file", "$binDir/$name")
-                }
             }
 
             var logdir = applicationContext.getExternalFilesDir("")?.path
