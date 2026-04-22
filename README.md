@@ -34,6 +34,17 @@ To build binaries locally run:
 mix desktop.installer
 ```
 
+## Android build
+
+The Android wrapper (Android Studio project) lives in `rel/android/`. To produce an APK from the command line, use the helper script (the same one CI runs):
+
+```bash
+./scripts/build_android.sh                  # debug APK
+./scripts/build_android.sh assembleRelease  # release APK
+```
+
+See [rel/android/README.md](rel/android/README.md) for the full toolchain requirements.
+
 ## Screenshots
 
 ![Linux build](/nodeploy/linux_todo.png?raw=true "Linux build")

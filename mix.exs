@@ -99,8 +99,8 @@ defmodule Todo.MixProject do
       {:phoenix, "~> 1.8"},
       {:phoenix_ecto, "~> 4.5"},
       {:ecto_sqlite3, "~> 0.22.0"},
-      # Temporarily pin sqlite3 adapter to avoid incompatibilities.
-      {:exqlite, "~> 0.22.0"},
+      # Pinned to the same version as the android runtime binary nifs.
+      {:exqlite, github: "elixir-desktop/exqlite", override: true},
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_dashboard, "~> 0.8.3"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
