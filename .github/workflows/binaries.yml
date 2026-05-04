@@ -55,7 +55,12 @@ jobs:
       run: |
         choco install openssl --version=1.1.1.2100 -y
         choco install nsis -y
-        IF EXIST "c:\\Program Files\\OpenSSL-Win64" (move "c:\\Program Files\\OpenSSL-Win64" "c:\\OpenSSL-Win64") ELSE (move "c:\\Program Files\\OpenSSL" "c:\\OpenSSL-Win64")
+        rem Copy instead of move — Program Files paths are often locked on runners (move fails with Access denied).
+        if exist "C:\\Program Files\\OpenSSL-Win64" (
+          xcopy "C:\\Program Files\\OpenSSL-Win64" "C:\\OpenSSL-Win64\\" /E /I /H /Y /Q
+        ) else if exist "C:\\Program Files\\OpenSSL" (
+          xcopy "C:\\Program Files\\OpenSSL" "C:\\OpenSSL-Win64\\" /E /I /H /Y /Q
+        )
 
     - name: Wire Windows NSIS into WSL PATH
       if: steps.win32-cache.outputs.cache-hit != 'true'
