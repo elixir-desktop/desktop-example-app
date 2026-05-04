@@ -16,11 +16,7 @@ defmodule Todo.MixProject do
       releases: [
         default_release: [
           applications: [runtime_tools: :permanent, ssl: :permanent],
-          steps: [
-            # &Desktop.Deployment.prepare_release/1,
-            :assemble,
-            &Desktop.Deployment.generate_installer/1
-          ]
+          steps: release_steps()
         ]
       ]
     ]
@@ -30,6 +26,23 @@ defmodule Todo.MixProject do
     [
       preferred_envs: [precommit: :test]
     ]
+  end
+
+  # Desktop installers are only produced for desktop targets. Mobile releases
+  # (e.g. MIX_TARGET=android for the APK) must stop at :assemble; the
+  # installer step invokes tooling that is not available on CI and is not used
+  # for embedded zip packaging.
+  defp release_steps do
+    case Mix.target() do
+      target when target in [:android, :ios] ->
+        [:assemble]
+
+      _ ->
+        [
+          :assemble,
+          &Desktop.Deployment.generate_installer/1
+        ]
+    end
   end
 
   # Specifies which paths to compile per environment.

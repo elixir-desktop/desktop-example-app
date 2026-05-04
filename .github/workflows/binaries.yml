@@ -23,7 +23,7 @@ jobs:
       id: win32-cache
       with:
         path: "c:\\opt\\otp.exe"
-        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}
+        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-v2
   
     - uses: Vampire/setup-wsl@v2
       if: steps.win32-cache.outputs.cache-hit != 'true'
@@ -32,7 +32,10 @@ jobs:
 
     - name: Install WSL dependencies
       if: steps.win32-cache.outputs.cache-hit != 'true'
-      run: apt update && apt install -y g++-mingw-w64 gcc-mingw-w64 make autoconf unzip
+      run: |
+        apt update && apt install -y g++-mingw-w64 gcc-mingw-w64 make autoconf unzip nsis
+        # otp_build installer_win32 invokes makensis.exe; Linux NSIS provides makensis.
+        ln -sf /usr/bin/makensis /usr/local/bin/makensis.exe
 
     - name: Install openssl
       if: steps.win32-cache.outputs.cache-hit != 'true'
@@ -96,7 +99,7 @@ jobs:
       uses: actions/cache/save@v3
       with:
         path: "c:\\opt\\otp.exe"
-        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}
+        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-v2
   
     - name: Run Erlang installer
       shell: cmd
