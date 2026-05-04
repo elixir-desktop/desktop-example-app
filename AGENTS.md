@@ -1,0 +1,36 @@
+# AGENTS.md
+
+## Cursor Cloud specific instructions
+
+### Overview
+
+This is a desktop TodoApp built with Elixir, Phoenix LiveView, and the `elixir-desktop` library. It renders UI via a native wxWidgets webview backed by a local Phoenix server on `127.0.0.1:30979`. Data is stored in SQLite at `~/.config/todo/database.sq3`.
+
+### Running the app
+
+```bash
+. "$HOME/.asdf/asdf.sh" && cd /workspace && DISPLAY=:1 iex -S mix
+```
+
+The web UI is accessible at http://127.0.0.1:30979/ in a browser (useful for testing without needing the native window).
+
+### Key commands
+
+| Task | Command |
+|------|---------|
+| Install deps | `mix deps.get` |
+| Compile | `mix compile` |
+| Lint | `mix lint` |
+| Tests | `mix test` |
+| Asset build | `mix assets.deploy` |
+| Run app (dev) | `iex -S mix` |
+
+### Non-obvious notes
+
+- **No external services required.** This is a fully self-contained desktop app — no Postgres, Redis, Docker containers, or external APIs.
+- **DBus/EGL warnings are expected** in headless/cloud environments. The app logs errors about DBus (desktop notifications) and EGL (GPU acceleration) but these do not affect functionality.
+- **wxWidgets is required** for the desktop window. In headless environments, ensure `DISPLAY=:1` is set and an X server (Xvfb) is running.
+- **Version management uses asdf** with `.tool-versions` pinning Erlang 28.4.3, Elixir 1.19.5, and Node.js 22.19.0.
+- **The `mix lint` alias** runs `compile --warnings-as-errors`, `format --check-formatted`, and `credo --ignore design`.
+- **No test files exist** in the project currently — `mix test` compiles in the test environment but reports "There are no tests to run".
+- **Assets** are built via esbuild (JS) and dart_sass (SCSS), both downloaded automatically by Mix on first run.
