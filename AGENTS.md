@@ -22,10 +22,10 @@ The web UI is accessible at http://127.0.0.1:30979/ in a browser (useful for tes
 | Compile | `mix compile` |
 | Lint | `mix lint` |
 | Tests | `mix test` |
-| Asset build | `mix assets.deploy` |
+| Asset build | `MIX_ENV=prod mix assets.deploy` |
 | Run app (dev) | Same as [Running the app](#running-the-app): load asdf, set `DISPLAY`, then `iex -S mix` |
 
-`mix assets.deploy` minifies and digests static assets for production releases. In development, esbuild and dart_sass run as Mix watchers when you start the app with `iex -S mix` (see `mix.exs` `asset_apps/1`).
+`MIX_ENV=prod mix assets.deploy` minifies and digests static assets for production releases. In development, esbuild and dart_sass run as Mix watchers when you start the app with `iex -S mix` (see `mix.exs` `asset_apps/1`).
 
 ### Non-obvious notes
 
@@ -36,5 +36,5 @@ The web UI is accessible at http://127.0.0.1:30979/ in a browser (useful for tes
 - **The `mix lint` alias** runs `compile --warnings-as-errors`, `format --check-formatted`, and `credo --ignore design`. Run it with the default Mix environment (`dev`); Credo is only a dev/test dependency, so `MIX_ENV=prod mix lint` will fail on the Credo step.
 - **Git LFS:** `*.a` files under `rel/android/` are tracked with Git LFS. After cloning, if those libraries look like small text files instead of archives, run `git lfs pull` before Android-related builds.
 - **No test files exist** in the project currently — `mix test` compiles in the test environment but reports "There are no tests to run".
-- **Assets** are built via esbuild (JS) and dart_sass (SCSS), both downloaded automatically by Mix on first run.
+- **Assets** are built via esbuild (JS) and dart_sass (SCSS), both downloaded automatically by Mix on first run. Run `npm install` in `assets/` before `mix assets.deploy` if you have not yet (see the root `README.md`).
 - **Android sample** lives under `rel/android/` (separate Gradle project). It uses a pinned Erlang/Elixir pair for the embedded runtime that can differ from the desktop `.tool-versions`; read `rel/android/README.md` before building an APK.
