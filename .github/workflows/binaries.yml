@@ -35,7 +35,19 @@ jobs:
     - name: Install WSL dependencies
       if: steps.win32-cache.outputs.cache-hit != 'true'
       run: |
-        apt update && apt install -y g++-mingw-w64 gcc-mingw-w64 make autoconf unzip
+        set -euo pipefail
+        export DEBIAN_FRONTEND=noninteractive
+        for attempt in 1 2 3 4 5; do
+          if apt-get update && apt-get install -y g++-mingw-w64 gcc-mingw-w64 make autoconf unzip; then
+            break
+          fi
+          echo "apt-get failed (attempt $attempt), retrying in 45s..." >&2
+          sleep 45
+          if [ "$attempt" -eq 5 ]; then
+            echo "apt-get install failed after 5 attempts" >&2
+            exit 1
+          fi
+        done
 
     - name: Install openssl and NSIS (Windows)
       if: steps.win32-cache.outputs.cache-hit != 'true'
