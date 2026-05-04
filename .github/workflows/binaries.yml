@@ -12,7 +12,7 @@ env:
 jobs:
   windows:
     runs-on: windows-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
     defaults:
       run:
         shell: wsl-bash {0}
@@ -23,12 +23,13 @@ jobs:
       id: win32-cache
       with:
         path: "c:\\opt\\otp.exe"
-        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-v2
+        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-v3
   
     - uses: Vampire/setup-wsl@v2
       if: steps.win32-cache.outputs.cache-hit != 'true'
       with:
-        distribution: Ubuntu-18.04
+        # Ubuntu 22.04 ships NSIS 3.x; OTP's installer_win32 rejects NSIS 2.x (Ubuntu 18.04).
+        distribution: Ubuntu-22.04
 
     - name: Install WSL dependencies
       if: steps.win32-cache.outputs.cache-hit != 'true'
@@ -99,7 +100,7 @@ jobs:
       uses: actions/cache/save@v3
       with:
         path: "c:\\opt\\otp.exe"
-        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-v2
+        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-v3
   
     - name: Run Erlang installer
       shell: cmd
