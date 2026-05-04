@@ -32,7 +32,7 @@ The web UI is accessible at http://127.0.0.1:30979/ in a browser (useful for tes
 - **No external services required.** This is a fully self-contained desktop app — no Postgres, Redis, Docker containers, or external APIs.
 - **DBus/EGL warnings are expected** in headless/cloud environments. The app logs errors about DBus (desktop notifications) and EGL (GPU acceleration) but these do not affect functionality.
 - **wxWidgets is required** for the desktop window. In headless environments, ensure `DISPLAY=:1` is set and an X server (Xvfb) is running.
-- **Version management uses asdf** with `.tool-versions` pinning Erlang 28.4.3, Elixir 1.19.5, and Node.js 22.19.0.
+- **Version management uses asdf** with `.tool-versions` pinning Erlang 28.4.3, Elixir 1.19.5, and Node.js 22.19.0. GitHub Actions (for example `.github/workflows/ci.yml`) still pins older Elixir/OTP for the default CI job; treat that file as the source of truth for CI, not `.tool-versions`.
 - **The `mix lint` alias** runs `compile --warnings-as-errors`, `format --check-formatted`, and `credo --ignore design`. Run it with the default Mix environment (`dev`); Credo is only a dev/test dependency, so `MIX_ENV=prod mix lint` will fail on the Credo step.
 - **Git LFS:** `*.a` files under `rel/android/` are tracked with Git LFS. After cloning, if those libraries look like small text files instead of archives, run `git lfs pull` before Android-related builds.
 - **No test files exist** in the project currently — `mix test` compiles in the test environment but reports "There are no tests to run".
