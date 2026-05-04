@@ -12,7 +12,7 @@ env:
 jobs:
   windows:
     runs-on: windows-latest
-    timeout-minutes: 120
+    timeout-minutes: 300
     defaults:
       run:
         shell: wsl-bash {0}
