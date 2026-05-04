@@ -71,6 +71,7 @@ if [ ! -d "assets/node_modules" ]; then
     (cd assets && npm install)
 fi
 
+mkdir -p "$(dirname "$APP_FILE")"
 rm -f "$APP_FILE"
 
 mix assets.deploy
