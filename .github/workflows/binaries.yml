@@ -23,27 +23,43 @@ jobs:
       id: win32-cache
       with:
         path: "c:\\opt\\otp.exe"
-        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-v3
+        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-v4
   
     - uses: Vampire/setup-wsl@v2
       if: steps.win32-cache.outputs.cache-hit != 'true'
       with:
-        # Ubuntu 22.04 ships NSIS 3.x; OTP's installer_win32 rejects NSIS 2.x (Ubuntu 18.04).
+        # Ubuntu 22.04 for up-to-date userland; OTP's installer_win32 invokes makensis.exe with
+        # Windows-style flags, so we install NSIS for Windows and expose it via /usr/local/bin/makensis.exe.
         distribution: Ubuntu-22.04
 
     - name: Install WSL dependencies
       if: steps.win32-cache.outputs.cache-hit != 'true'
       run: |
-        apt update && apt install -y g++-mingw-w64 gcc-mingw-w64 make autoconf unzip nsis
-        # otp_build installer_win32 invokes makensis.exe; Linux NSIS provides makensis.
-        ln -sf /usr/bin/makensis /usr/local/bin/makensis.exe
+        apt update && apt install -y g++-mingw-w64 gcc-mingw-w64 make autoconf unzip
 
-    - name: Install openssl
+    - name: Install openssl and NSIS (Windows)
       if: steps.win32-cache.outputs.cache-hit != 'true'
       shell: cmd
       run: |
-        choco install openssl --version=1.1.1.2100
+        choco install openssl --version=1.1.1.2100 -y
+        choco install nsis -y
         IF EXIST "c:\\Program Files\\OpenSSL-Win64" (move "c:\\Program Files\\OpenSSL-Win64" "c:\\OpenSSL-Win64") ELSE (move "c:\\Program Files\\OpenSSL" "c:\\OpenSSL-Win64")
+
+    - name: Wire Windows NSIS into WSL PATH
+      if: steps.win32-cache.outputs.cache-hit != 'true'
+      run: |
+        NSIS="/mnt/c/Program Files (x86)/NSIS/makensis.exe"
+        if [ ! -f "$NSIS" ]; then
+          NSIS="/mnt/c/Program Files/NSIS/makensis.exe"
+        fi
+        if [ ! -f "$NSIS" ]; then
+          echo "Windows NSIS makensis.exe not found after choco install" >&2
+          exit 1
+        fi
+        install -d /usr/local/bin
+        # otp_build runs makensis.exe /V2 ... — Windows NSIS accepts those flags; Linux makensis does not.
+        printf '%s\n' '#!/bin/sh' "exec \"$NSIS\" \"\$@\"" > /usr/local/bin/makensis.exe
+        chmod +x /usr/local/bin/makensis.exe
  
     - name: Download wxWidgets
       if: steps.win32-cache.outputs.cache-hit != 'true'
@@ -100,7 +116,7 @@ jobs:
       uses: actions/cache/save@v3
       with:
         path: "c:\\opt\\otp.exe"
-        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-v3
+        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-v4
   
     - name: Run Erlang installer
       shell: cmd
