@@ -200,14 +200,14 @@ jobs:
           _build/prod/*.exe
 
   macos:
-    runs-on: macos-13
+    runs-on: macos-15
     steps:
     - name: macOS Cache
       uses: actions/cache@v3
       id: macos-cache
       with:
         path: /Users/runner/.asdf
-        key: macos-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}
+        key: macos15-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}
       
     - name: "Install brew deps"
       if: steps.macos-cache.outputs.cache-hit != 'true'
