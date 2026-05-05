@@ -12,8 +12,8 @@ env:
 jobs:
   windows:
     runs-on: windows-latest
-    # Full pipeline (msys2 mix deps / npm / desktop.installer) needs >20 min; avoid job-level cancel mid-step.
-    timeout-minutes: 90
+    # mix deps.get → npm → desktop.installer on Windows can exceed 90 minutes on busy runners.
+    timeout-minutes: 180
     defaults:
       run:
         shell: wsl-bash {0}
