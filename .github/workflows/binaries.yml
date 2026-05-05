@@ -12,8 +12,8 @@ env:
 jobs:
   windows:
     runs-on: windows-latest
-    # Fail fast if a step hangs (common on Windows+LFS); cold OTP rebuild needs cache elsewhere.
-    timeout-minutes: 20
+    # Full pipeline (msys2 mix deps / npm / desktop.installer) needs >20 min; avoid job-level cancel mid-step.
+    timeout-minutes: 90
     defaults:
       run:
         shell: wsl-bash {0}
