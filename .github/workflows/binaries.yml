@@ -12,8 +12,8 @@ env:
 jobs:
   windows:
     runs-on: windows-latest
-    # mix deps.get → npm → desktop.installer on Windows can exceed 90 minutes on busy runners.
-    timeout-minutes: 180
+    # GitHub-hosted jobs allow up to 360 minutes; Windows mix/npm/installer can exceed 180 on slow runs.
+    timeout-minutes: 360
     defaults:
       run:
         shell: wsl-bash {0}
