@@ -207,12 +207,12 @@ jobs:
       id: macos-cache
       with:
         path: /Users/runner/.asdf
-        key: macos15-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}
+        key: macos15-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-png-sys
       
     - name: "Install brew deps"
       if: steps.macos-cache.outputs.cache-hit != 'true'
       run: |
-            brew install binutils coreutils wget automake autoconf libtool
+            brew install binutils coreutils wget automake autoconf libtool libpng
   
     - name: "Installing wxWidgets"
       if: steps.macos-cache.outputs.cache-hit != 'true'
@@ -222,7 +222,9 @@ jobs:
         cd wxWidgets; 
         git checkout ${{ env.WXWIDGETS_VERSION }}
         git submodule update --init
-        ./configure --prefix=/usr/local/wxWidgets --enable-webview --enable-compat30 --disable-shared
+        # Bundled libpng in wx 3.2.x can fail on Apple Silicon + recent Xcode (fp.h removed);
+        # link against Homebrew libpng instead.
+        ./configure --prefix=/usr/local/wxWidgets --enable-webview --enable-compat30 --disable-shared --with-libpng=sys
         make -j8
 
     - name: "Installing Erlang"
