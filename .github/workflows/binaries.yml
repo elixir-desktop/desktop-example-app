@@ -226,7 +226,7 @@ jobs:
       id: macos-cache
       with:
         path: /Users/runner/.asdf
-        key: macos15-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-png-tiff-sys-asdf-brew
+        key: macos15-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-png-tiff-sys-asdf-brew-kerl-cxx
       
     - name: "Install brew deps"
       if: steps.macos-cache.outputs.cache-hit != 'true'
@@ -276,7 +276,8 @@ jobs:
         echo "erlang ref:${{ env.OTP_VERSION }}" >> ~/.tool-versions
         echo "elixir ${{ env.ELIXIR_VERSION }}${{ env.ELIXIR_VARIANT }}" >> ~/.tool-versions
         echo "nodejs v18.7.0" >> ~/.tool-versions
-        export KERL_CONFIGURE_OPTIONS="--enable-parallel-configure --with-wxdir=$HOME/projects/wxWidgets --disable-jit --without-javac --disable-debug CXX='gcc -std=c++11'"
+        # Do not use CXX='gcc -std=c++11' — kerl splits that into CXX=gcc plus a stray -std=c++11 configure arg.
+        export KERL_CONFIGURE_OPTIONS="--enable-parallel-configure --with-wxdir=$HOME/projects/wxWidgets --disable-jit --without-javac --disable-debug CXX=clang++"
         asdf install
 
     - uses: actions/checkout@v1
