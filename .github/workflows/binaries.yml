@@ -215,12 +215,18 @@ jobs:
   macos:
     runs-on: macos-15
     steps:
+    # asdf v0.19+ is a Go binary from Homebrew; the old git clone + ~/.asdf/asdf.sh flow is invalid.
+    - name: Install asdf (Homebrew)
+      run: |
+        brew install asdf
+        echo "$(brew --prefix asdf)/bin" >> "$GITHUB_PATH"
+
     - name: macOS Cache
       uses: actions/cache@v3
       id: macos-cache
       with:
         path: /Users/runner/.asdf
-        key: macos15-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-png-tiff-sys
+        key: macos15-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-png-tiff-sys-asdf-brew
       
     - name: "Install brew deps"
       if: steps.macos-cache.outputs.cache-hit != 'true'
@@ -262,21 +268,22 @@ jobs:
     - name: "Installing Erlang"
       if: steps.macos-cache.outputs.cache-hit != 'true'
       run: |
-        git clone https://github.com/asdf-vm/asdf.git ~/.asdf
-        . $HOME/.asdf/asdf.sh
+        set -euo pipefail
+        export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
         asdf plugin add erlang
         asdf plugin add elixir
         asdf plugin add nodejs
-        echo "erlang ref:${{ env.OTP_VERSION }}" >> .tool-versions
-        echo "elixir ${{ env.ELIXIR_VERSION }}${{ env.ELIXIR_VARIANT }}" >> .tool-versions
-        echo "nodejs v18.7.0" >> .tool-versions
-        export KERL_CONFIGURE_OPTIONS="--enable-parallel-configure --with-wxdir=`echo ~/projects/wxWidgets` --disable-jit --without-javac --disable-debug CXX='gcc -std=c++11'"
+        echo "erlang ref:${{ env.OTP_VERSION }}" >> ~/.tool-versions
+        echo "elixir ${{ env.ELIXIR_VERSION }}${{ env.ELIXIR_VARIANT }}" >> ~/.tool-versions
+        echo "nodejs v18.7.0" >> ~/.tool-versions
+        export KERL_CONFIGURE_OPTIONS="--enable-parallel-configure --with-wxdir=$HOME/projects/wxWidgets --disable-jit --without-javac --disable-debug CXX='gcc -std=c++11'"
         asdf install
 
     - uses: actions/checkout@v1
     - name: "Compile and Lint"
       run: |
-        . $HOME/.asdf/asdf.sh
+        set -euo pipefail
+        export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
         echo "erlang ref:${{ env.OTP_VERSION }}" > .tool-versions
         echo "elixir ${{ env.ELIXIR_VERSION }}${{ env.ELIXIR_VARIANT }}" >> .tool-versions
         echo "nodejs v18.7.0" >> .tool-versions
@@ -290,7 +297,8 @@ jobs:
       env:
         MACOS_PEM: ${{ secrets.MACOS_PEM }}
       run: |
-        . $HOME/.asdf/asdf.sh
+        set -euo pipefail
+        export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
         mix desktop.create_keychain maybe
         export MACOS_KEYCHAIN="$HOME/Library/Keychains/macos-build.keychain"
         export LD_LIBRARY_PATH="$HOME/projects/wxWidgets/lib/"
