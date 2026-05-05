@@ -220,29 +220,43 @@ jobs:
       id: macos-cache
       with:
         path: /Users/runner/.asdf
-        key: macos15-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-png-sys-libpng-prefix
+        key: macos15-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-png-tiff-sys
       
     - name: "Install brew deps"
       if: steps.macos-cache.outputs.cache-hit != 'true'
       run: |
-            brew install binutils coreutils wget automake autoconf libtool libpng
+            brew install binutils coreutils wget automake autoconf libtool libpng libtiff
   
     - name: "Installing wxWidgets"
       if: steps.macos-cache.outputs.cache-hit != 'true'
       run: |
-        mkdir ~/projects && cd ~/projects
-        git clone ${{ env.WXWIDGETS_REPO }}
-        cd wxWidgets; 
-        git checkout ${{ env.WXWIDGETS_VERSION }}
-        git submodule update --init
-        # Homebrew keg-only libpng: compiler must see include/lib paths (configure failed with "png.h ... no").
+        set -euo pipefail
+        mkdir -p ~/projects && cd ~/projects
+        git config --global http.lowSpeedLimit 500
+        git config --global http.lowSpeedTime 120
+        git config --global http.postBuffer 524288000
+        for attempt in 1 2 3 4 5; do
+          rm -rf wxWidgets
+          if git clone --depth 1 --branch ${{ env.WXWIDGETS_VERSION }} ${{ env.WXWIDGETS_REPO }} wxWidgets; then
+            break
+          fi
+          echo "git clone wxWidgets failed (attempt $attempt), retrying..." >&2
+          if [ "$attempt" -eq 5 ]; then
+            echo "git clone wxWidgets failed after 5 attempts" >&2
+            exit 1
+          fi
+          sleep $((attempt * 25))
+        done
+        cd wxWidgets
+        git submodule update --init --depth 1
         LIBPNG_PREFIX="$(brew --prefix libpng)"
-        export CPPFLAGS="-I${LIBPNG_PREFIX}/include ${CPPFLAGS:-}"
-        export LDFLAGS="-L${LIBPNG_PREFIX}/lib ${LDFLAGS:-}"
-        export PKG_CONFIG_PATH="${LIBPNG_PREFIX}/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
-        # Bundled libpng in wx 3.2.x can fail on Apple Silicon + recent Xcode (fp.h removed);
-        # link against Homebrew libpng instead.
-        ./configure --prefix=/usr/local/wxWidgets --enable-webview --enable-compat30 --disable-shared --with-libpng=sys
+        LIBTIFF_PREFIX="$(brew --prefix libtiff)"
+        export CPPFLAGS="-I${LIBPNG_PREFIX}/include -I${LIBTIFF_PREFIX}/include ${CPPFLAGS:-}"
+        export LDFLAGS="-L${LIBPNG_PREFIX}/lib -L${LIBTIFF_PREFIX}/lib ${LDFLAGS:-}"
+        export PKG_CONFIG_PATH="${LIBPNG_PREFIX}/lib/pkgconfig:${LIBTIFF_PREFIX}/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
+        # Bundled libpng can hit fp.h issues on recent Xcode; use Homebrew libpng/libtiff (keg-only paths above).
+        ./configure --prefix=/usr/local/wxWidgets --enable-webview --enable-compat30 --disable-shared \
+          --with-libpng=sys --with-libtiff=sys
         make -j8
 
     - name: "Installing Erlang"
