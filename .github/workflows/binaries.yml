@@ -220,7 +220,7 @@ jobs:
       id: macos-cache
       with:
         path: /Users/runner/.asdf
-        key: macos15-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-png-sys
+        key: macos15-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-png-sys-libpng-prefix
       
     - name: "Install brew deps"
       if: steps.macos-cache.outputs.cache-hit != 'true'
@@ -235,6 +235,11 @@ jobs:
         cd wxWidgets; 
         git checkout ${{ env.WXWIDGETS_VERSION }}
         git submodule update --init
+        # Homebrew keg-only libpng: compiler must see include/lib paths (configure failed with "png.h ... no").
+        LIBPNG_PREFIX="$(brew --prefix libpng)"
+        export CPPFLAGS="-I${LIBPNG_PREFIX}/include ${CPPFLAGS:-}"
+        export LDFLAGS="-L${LIBPNG_PREFIX}/lib ${LDFLAGS:-}"
+        export PKG_CONFIG_PATH="${LIBPNG_PREFIX}/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
         # Bundled libpng in wx 3.2.x can fail on Apple Silicon + recent Xcode (fp.h removed);
         # link against Homebrew libpng instead.
         ./configure --prefix=/usr/local/wxWidgets --enable-webview --enable-compat30 --disable-shared --with-libpng=sys
