@@ -295,11 +295,11 @@ jobs:
         cd assets && npm install
 
     - name: "Build Release"
-      env:
-        MACOS_PEM: ${{ secrets.MACOS_PEM }}
       run: |
         set -euo pipefail
         export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
+        # Do not set MACOS_PEM here: if the secret is set but not a valid Developer ID PEM,
+        # create_keychain maybe still runs the full path and fails import (CI cannot code-sign).
         mix desktop.create_keychain maybe
         export MACOS_KEYCHAIN="$HOME/Library/Keychains/macos-build.keychain"
         export LD_LIBRARY_PATH="$HOME/projects/wxWidgets/lib/"
