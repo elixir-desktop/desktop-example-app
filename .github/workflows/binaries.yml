@@ -12,10 +12,14 @@ env:
 jobs:
   windows:
     runs-on: windows-latest
-    timeout-minutes: 300
+    # Fail fast if a step hangs (common on Windows+LFS); cold OTP rebuild needs cache elsewhere.
+    timeout-minutes: 20
     defaults:
       run:
         shell: wsl-bash {0}
+    env:
+      # Repo uses Git LFS for Android *.a etc.; smudge on NTFS/WSL often stalls after fetch.
+      GIT_LFS_SKIP_SMUDGE: "1"
     name: Build Erlang/OTP (Windows)
     steps:
     - name: Restore Windows Cache
@@ -81,10 +85,15 @@ jobs:
     - name: Download wxWidgets
       if: steps.win32-cache.outputs.cache-hit != 'true'
       run: |
-        git clone ${{ env.WXWIDGETS_REPO }}
+        set -euo pipefail
+        cd "${GITHUB_WORKSPACE}"
+        # Shallow clone + stall limits avoid hangs on slow/stuck HTTP after "Compressing objects".
+        git config --global http.lowSpeedLimit 500
+        git config --global http.lowSpeedTime 120
+        git config --global http.postBuffer 524288000
+        git clone --depth 1 --branch ${{ env.WXWIDGETS_VERSION }} --single-branch ${{ env.WXWIDGETS_REPO }} wxWidgets
         cd wxWidgets
-        git checkout ${{ env.WXWIDGETS_VERSION }}
-        git submodule update --init
+        git submodule update --init --depth 1
         sed -i -r -e 's/wxUSE_POSTSCRIPT +0/wxUSE_POSTSCRIPT 1/' include/wx/msw/setup.h
         sed -i -r -e 's/wxUSE_WEBVIEW_EDGE +0/wxUSE_WEBVIEW_EDGE 1/' include/wx/msw/setup.h        
         sed -i -r -e 's/WXWIN_COMPATIBILITY_3_0 +0/WXWIN_COMPATIBILITY_3_0 1/' include/wx/msw/setup.h        
@@ -114,9 +123,10 @@ jobs:
     - name: Compile Erlang
       if: steps.win32-cache.outputs.cache-hit != 'true'
       run: |
-        git clone ${{ env.OTP_GITHUB_URL }}
+        set -euo pipefail
+        cd "${GITHUB_WORKSPACE}"
+        git clone --depth 1 --branch ${{ env.OTP_VERSION }} --single-branch ${{ env.OTP_GITHUB_URL }} otp
         cd otp
-        git checkout ${{ env.OTP_VERSION }}
         export ERL_TOP=`pwd`
         export MAKEFLAGS=-j$(($(nproc) + 2))
         export ERLC_USE_SERVER=true
@@ -161,13 +171,16 @@ jobs:
       shell: msys2 {0}
       run: |
         cd $HOME
-        git clone https://github.com/elixir-lang/elixir.git
+        git clone --depth 1 --branch v${{ env.ELIXIR_VERSION }} --single-branch https://github.com/elixir-lang/elixir.git
         cd elixir
-        git checkout v${{ env.ELIXIR_VERSION }}
         make 
         echo export PATH=\"\$PATH:$HOME/elixir/bin\" >> $HOME/.bashrc
     
-    - uses: actions/checkout@v1
+    # Do not run Git LFS smudge: rel/android *.a are huge and stall on Windows I/O after fetch.
+    - uses: actions/checkout@v4
+      with:
+        lfs: false
+        fetch-depth: 1
 
     - name: "Get dependencies"
       shell: msys2 {0}
