@@ -10,15 +10,14 @@ env:
   DOCKER_BUILDKIT: 0
 
 jobs:
-  windows:
+  # wxWidgets + OTP compile alone can approach GitHub's 360m/job limit; splitting gives toolchain + Mix two budgets.
+  windows-toolchain:
     runs-on: windows-latest
-    # GitHub-hosted jobs allow up to 360 minutes; Windows mix/npm/installer can exceed 180 on slow runs.
     timeout-minutes: 360
     defaults:
       run:
         shell: wsl-bash {0}
     env:
-      # Repo uses Git LFS for Android *.a etc.; smudge on NTFS/WSL often stalls after fetch.
       GIT_LFS_SKIP_SMUDGE: "1"
     name: Build Erlang/OTP (Windows)
     steps:
@@ -28,12 +27,10 @@ jobs:
       with:
         path: "c:\\opt\\otp.exe"
         key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-v4
-  
+
     - uses: Vampire/setup-wsl@v2
       if: steps.win32-cache.outputs.cache-hit != 'true'
       with:
-        # Ubuntu 22.04 for up-to-date userland; OTP's installer_win32 invokes makensis.exe with
-        # Windows-style flags, so we install NSIS for Windows and expose it via /usr/local/bin/makensis.exe.
         distribution: Ubuntu-22.04
 
     - name: Install WSL dependencies
@@ -59,7 +56,6 @@ jobs:
       run: |
         choco install openssl --version=1.1.1.2100 -y
         choco install nsis -y
-        rem Copy instead of move — Program Files paths are often locked on runners (move fails with Access denied).
         if exist "C:\\Program Files\\OpenSSL-Win64" (
           xcopy "C:\\Program Files\\OpenSSL-Win64" "C:\\OpenSSL-Win64\\" /E /I /H /Y /Q
         ) else if exist "C:\\Program Files\\OpenSSL" (
@@ -78,16 +74,14 @@ jobs:
           exit 1
         fi
         install -d /usr/local/bin
-        # otp_build runs makensis.exe /V2 ... — Windows NSIS accepts those flags; Linux makensis does not.
         printf '%s\n' '#!/bin/sh' "exec \"$NSIS\" \"\$@\"" > /usr/local/bin/makensis.exe
         chmod +x /usr/local/bin/makensis.exe
- 
+
     - name: Download wxWidgets
       if: steps.win32-cache.outputs.cache-hit != 'true'
       run: |
         set -euo pipefail
         cd "${GITHUB_WORKSPACE}"
-        # Shallow clone + stall limits avoid hangs on slow/stuck HTTP after "Compressing objects".
         git config --global http.lowSpeedLimit 500
         git config --global http.lowSpeedTime 120
         git config --global http.postBuffer 524288000
@@ -95,8 +89,8 @@ jobs:
         cd wxWidgets
         git submodule update --init --depth 1
         sed -i -r -e 's/wxUSE_POSTSCRIPT +0/wxUSE_POSTSCRIPT 1/' include/wx/msw/setup.h
-        sed -i -r -e 's/wxUSE_WEBVIEW_EDGE +0/wxUSE_WEBVIEW_EDGE 1/' include/wx/msw/setup.h        
-        sed -i -r -e 's/WXWIN_COMPATIBILITY_3_0 +0/WXWIN_COMPATIBILITY_3_0 1/' include/wx/msw/setup.h        
+        sed -i -r -e 's/wxUSE_WEBVIEW_EDGE +0/wxUSE_WEBVIEW_EDGE 1/' include/wx/msw/setup.h
+        sed -i -r -e 's/WXWIN_COMPATIBILITY_3_0 +0/WXWIN_COMPATIBILITY_3_0 1/' include/wx/msw/setup.h
 
     - name: Install WebView2
       if: steps.win32-cache.outputs.cache-hit != 'true'
@@ -132,7 +126,7 @@ jobs:
         export ERLC_USE_SERVER=true
         export ERTS_SKIP_DEPEND=true
         eval `./otp_build env_win32 x64`
-        ./otp_build all -a 
+        ./otp_build all -a
         cp /mnt/c/opt/local64/pgm/wxWidgets-3.x.x/3rdparty/webview2/runtimes/win-x64/native/WebView2Loader.dll $ERL_TOP/release/win32/erts-*/bin/
         ./otp_build installer_win32
         export NAME=`ls release/win32/otp*.exe`
@@ -144,7 +138,37 @@ jobs:
       with:
         path: "c:\\opt\\otp.exe"
         key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-v4
-  
+
+  windows-installer:
+    runs-on: windows-latest
+    needs: windows-toolchain
+    timeout-minutes: 360
+    defaults:
+      run:
+        shell: wsl-bash {0}
+    env:
+      GIT_LFS_SKIP_SMUDGE: "1"
+    name: Build Windows installer
+    steps:
+    - name: Restore Windows Cache
+      uses: actions/cache/restore@v3
+      id: win32-cache
+      with:
+        path: "c:\\opt\\otp.exe"
+        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-v4
+
+    - name: Verify OTP installer exists
+      shell: cmd
+      run: |
+        if not exist "C:\opt\otp.exe" (
+          echo Missing C:\opt\otp.exe - toolchain job should have restored or built it. >&2
+          exit /b 1
+        )
+
+    - name: Install NSIS for installer step
+      shell: cmd
+      run: choco install nsis -y
+
     - name: Run Erlang installer
       shell: cmd
       run: C:\\opt\\otp.exe /S
