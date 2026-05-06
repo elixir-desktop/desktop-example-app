@@ -199,10 +199,14 @@ jobs:
         export MIX_HOME="$GITHUB_WORKSPACE/.ci_mix_home"
         export HEX_HOME="$GITHUB_WORKSPACE/.ci_hex_home"
         export HEX_HTTP_CONCURRENCY=8
+        export GIT_TERMINAL_PROMPT=0
+        git config --global http.lowSpeedLimit 500
+        git config --global http.lowSpeedTime 120
         mkdir -p "$MIX_HOME" "$HEX_HOME"
         mix local.hex --force
         mix local.rebar --force
-        mix deps.get
+        # Installer/release uses prod; skip dev/test-only deps to shrink Hex + git work.
+        MIX_ENV=prod mix deps.get --only prod
 
     - name: Save Mix / Hex cache
       if: steps.mix-cache.outputs.cache-hit != 'true'
@@ -230,6 +234,7 @@ jobs:
         set -euo pipefail
         export MIX_HOME="$GITHUB_WORKSPACE/.ci_mix_home"
         export HEX_HOME="$GITHUB_WORKSPACE/.ci_hex_home"
+        export MIX_ENV=prod
         mix assets.deploy
         mix desktop.installer
 
