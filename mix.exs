@@ -103,14 +103,11 @@ defmodule Todo.MixProject do
     deps_list = [
       # {:desktop, path: "../desktop"},
       # {:desktop, "~> 1.5"},
-      # Shallow clones keep CI (especially Windows + NTFS) from drowning in full-repo history.
-      # Pinned full SHAs (required with :depth) keep lockfile versions stable.
+      # Pinned SHAs for reproducible CI. Do not add :depth with :ref — Android CI uses Elixir 1.17, where Mix forbids that pair.
       {:desktop,
-       github: "elixir-desktop/desktop", ref: "0966857094b6ceaec6789fae65b74478bfc8be19", depth: 1},
+       github: "elixir-desktop/desktop", ref: "0966857094b6ceaec6789fae65b74478bfc8be19"},
       {:desktop_deployment,
-       github: "elixir-desktop/deployment",
-       ref: "c5c09864693121acb7e6de0f8f3253937ed2e07c",
-       depth: 1},
+       github: "elixir-desktop/deployment", ref: "c5c09864693121acb7e6de0f8f3253937ed2e07c"},
       {:igniter, "~> 0.6"},
       # {:desktop_deployment, path: "../deployment", runtime: false},
 
@@ -122,8 +119,7 @@ defmodule Todo.MixProject do
       {:exqlite,
        github: "elixir-desktop/exqlite",
        ref: "1caf1f42395fff8a68ac5a509f7294090a6f6f0d",
-       override: true,
-       depth: 1},
+       override: true},
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_dashboard, "~> 0.8.3"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},
