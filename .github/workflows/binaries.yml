@@ -139,8 +139,8 @@ jobs:
         path: "c:\\opt\\otp.exe"
         key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-v4
 
-  # Assemble + NSIS each need up to 360m; split so `mix desktop.installer` gets its own budget.
-  windows-assemble:
+  # Compile, release assemble, and NSIS can each need up to 360m on Windows runners.
+  windows-compile:
     runs-on: windows-latest
     needs: windows-toolchain
     timeout-minutes: 360
@@ -149,7 +149,7 @@ jobs:
         shell: wsl-bash {0}
     env:
       GIT_LFS_SKIP_SMUDGE: "1"
-    name: Build Windows release (assemble)
+    name: Build Windows compile & assets
     steps:
     - name: Restore Windows Cache
       uses: actions/cache/restore@v3
@@ -246,6 +246,139 @@ jobs:
       run: |
         cd assets && npm install
 
+    - name: Compile prod and digest assets
+      env:
+        MAKE: make
+        REBAR_TARGET_ARCH_WORDSIZE: 64
+        REBAR_TARGET_ARCH: x86_64-w64-mingw32
+      shell: msys2 {0}
+      run: |
+        set -euo pipefail
+        export MIX_HOME="$GITHUB_WORKSPACE/.ci_mix_home"
+        export HEX_HOME="$GITHUB_WORKSPACE/.ci_hex_home"
+        export MIX_ENV=prod
+        mix compile
+        mix assets.deploy
+
+    - name: Save Windows compile output cache
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          _build/prod
+          priv/static
+        key: windows-compile-${{ hashFiles('mix.lock') }}-elixir-${{ env.ELIXIR_VERSION }}-v1
+
+  windows-assemble:
+    runs-on: windows-latest
+    needs: windows-compile
+    timeout-minutes: 360
+    defaults:
+      run:
+        shell: wsl-bash {0}
+    env:
+      GIT_LFS_SKIP_SMUDGE: "1"
+    name: Build Windows release (assemble)
+    steps:
+    - name: Restore Windows Cache
+      uses: actions/cache/restore@v3
+      id: win32-cache
+      with:
+        path: "c:\\opt\\otp.exe"
+        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-v4
+
+    - name: Verify OTP installer exists
+      shell: cmd
+      run: |
+        if not exist "C:\opt\otp.exe" (
+          echo Missing C:\opt\otp.exe - toolchain job should have restored or built it. >&2
+          exit /b 1
+        )
+
+    - name: Install NSIS for installer step
+      shell: cmd
+      run: choco install nsis -y
+
+    - name: Run Erlang installer
+      shell: cmd
+      run: C:\\opt\\otp.exe /S
+
+    - name: "Install msys2"
+      uses: msys2/setup-msys2@v2
+      with:
+          install: pacman-mirrors pkg-config base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-go upx mingw-w64-x86_64-dlfcn unzip git tar mingw-w64-x86_64-nodejs mingw-w64-x86_64-imagemagick mingw-w64-x86_64-osslsigncode autoconf automake libtool gettext-devel gettext
+          update: true
+
+    - name: Locate Erlang
+      shell: msys2 {0}
+      run: |
+        ERTS=`find /c/Program\ Files/[Ee]rl* -type d -name "erts-*" -not -path "*lib*"`
+        echo $ERTS
+        echo export PATH=\"\$PATH:$ERTS/bin\" > $HOME/.bashrc
+
+    - name: Locate NSIS
+      shell: msys2 {0}
+      run: |
+        echo export PATH=\"\$PATH:/c/Program\ Files\ \(x86\)/NSIS\" >> $HOME/.bashrc
+
+    - name: Install Elixir
+      shell: msys2 {0}
+      run: |
+        cd $HOME
+        git clone --depth 1 --branch v${{ env.ELIXIR_VERSION }} --single-branch https://github.com/elixir-lang/elixir.git
+        cd elixir
+        make
+        echo export PATH=\"\$PATH:$HOME/elixir/bin\" >> $HOME/.bashrc
+
+    - uses: actions/checkout@v4
+      with:
+        lfs: false
+        fetch-depth: 1
+
+    - name: Restore Mix / Hex cache
+      id: mix-cache
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          deps
+          .ci_mix_home
+          .ci_hex_home
+        key: windows-mix-${{ hashFiles('mix.lock') }}-elixir-${{ env.ELIXIR_VERSION }}
+
+    - name: "Get dependencies"
+      shell: msys2 {0}
+      run: |
+        set -euo pipefail
+        export MIX_HOME="$GITHUB_WORKSPACE/.ci_mix_home"
+        export HEX_HOME="$GITHUB_WORKSPACE/.ci_hex_home"
+        export HEX_HTTP_CONCURRENCY=8
+        export GIT_TERMINAL_PROMPT=0
+        git config --global http.lowSpeedLimit 500
+        git config --global http.lowSpeedTime 120
+        mkdir -p "$MIX_HOME" "$HEX_HOME"
+        mix local.hex --force
+        mix local.rebar --force
+        MIX_ENV=prod mix deps.get --only prod
+
+    - name: "npm install"
+      shell: msys2 {0}
+      run: |
+        cd assets && npm install
+
+    - name: Restore Windows compile output
+      uses: actions/cache/restore@v4
+      id: compile-cache
+      with:
+        path: |
+          _build/prod
+          priv/static
+        key: windows-compile-${{ hashFiles('mix.lock') }}-elixir-${{ env.ELIXIR_VERSION }}-v1
+
+    - name: Verify compile output from prior job
+      shell: msys2 {0}
+      run: |
+        set -euo pipefail
+        test -d "$GITHUB_WORKSPACE/_build/prod/lib" || { echo "Missing compiled _build/prod — compile job must run first." >&2; exit 1; }
+
     - name: Assemble prod release (no NSIS yet)
       env:
         MAKE: make
@@ -258,7 +391,6 @@ jobs:
         export MIX_HOME="$GITHUB_WORKSPACE/.ci_mix_home"
         export HEX_HOME="$GITHUB_WORKSPACE/.ci_hex_home"
         export MIX_ENV=prod
-        mix assets.deploy
         mix release default_release --overwrite
 
     - name: Save Windows prod _build cache
