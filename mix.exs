@@ -38,10 +38,17 @@ defmodule Todo.MixProject do
         [:assemble]
 
       _ ->
-        [
-          :assemble,
-          &Desktop.Deployment.generate_installer/1
-        ]
+        # CI can assemble in one Windows job and run NSIS packaging in the next (separate 360m budget).
+        case System.get_env("DESKTOP_CI_RELEASE_PHASE") do
+          "assemble" ->
+            [:assemble]
+
+          _ ->
+            [
+              :assemble,
+              &Desktop.Deployment.generate_installer/1
+            ]
+        end
     end
   end
 
