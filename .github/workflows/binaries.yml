@@ -5,7 +5,7 @@ env:
   OTP_VERSION: OTP-26.2.5.9_diode
   WXWIDGETS_REPO: https://github.com/wxWidgets/wxWidgets.git
   WXWIDGETS_VERSION: v3.2.6
-  ELIXIR_VERSION: 1.16.3
+  ELIXIR_VERSION: 1.19.5
   ELIXIR_VARIANT: -otp-26
   DOCKER_BUILDKIT: 0
 
@@ -253,8 +253,11 @@ jobs:
     - name: Compile prod dependencies (Mix only)
       env:
         MAKE: make
+        MAKEFLAGS: -j4
         REBAR_TARGET_ARCH_WORDSIZE: 64
         REBAR_TARGET_ARCH: x86_64-w64-mingw32
+        # Elixir 1.19+: parallel OS processes for deps (native/NIF builds); cuts wall time vs 1.16.
+        MIX_OS_DEPS_COMPILE_PARTITION_COUNT: "4"
       shell: msys2 {0}
       run: |
         set -euo pipefail
