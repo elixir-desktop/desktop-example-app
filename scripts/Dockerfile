@@ -52,7 +52,8 @@ ARG ELIXIR_VARIANT
 ENV ELIXIR_VARIANT=${ELIXIR_VARIANT:-"-otp-26"}
 
 ENV ASDF_DIR=/root/.asdf
-RUN git clone https://github.com/asdf-vm/asdf.git ${ASDF_DIR} && \
+# asdf v0.19+ dropped asdf.sh (Go rewrite); pin v0.18.x for Docker RUN sourcing.
+RUN git clone https://github.com/asdf-vm/asdf.git ${ASDF_DIR} --branch v0.18.1 --depth 1 && \
     . ${ASDF_DIR}/asdf.sh && \
     asdf plugin add elixir && \
     echo "elixir ${ELIXIR_VERSION}${ELIXIR_VARIANT}" >> .tool-versions && \
