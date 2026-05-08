@@ -241,10 +241,15 @@ jobs:
           .ci_hex_home
         key: windows-mix-${{ hashFiles('mix.lock') }}-elixir-${{ env.ELIXIR_VERSION }}
 
+    # MSYS2's bundled npm can segfault (exit 139); use the Actions Node toolchain + cmd.exe.
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
     - name: "npm install"
-      shell: msys2 {0}
-      run: |
-        cd assets && npm install
+      shell: cmd
+      working-directory: assets
+      run: npm install
 
     - name: Compile prod (Mix only)
       env:
@@ -356,10 +361,15 @@ jobs:
         mix local.rebar --force
         MIX_ENV=prod mix deps.get --only prod
 
+    # MSYS2's bundled npm can segfault (exit 139); use the Actions Node toolchain + cmd.exe.
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
     - name: "npm install"
-      shell: msys2 {0}
-      run: |
-        cd assets && npm install
+      shell: cmd
+      working-directory: assets
+      run: npm install
 
     - name: Restore Windows Mix compile output
       uses: actions/cache/restore@v4
@@ -486,10 +496,15 @@ jobs:
         mix local.rebar --force
         MIX_ENV=prod mix deps.get --only prod
 
+    # MSYS2's bundled npm can segfault (exit 139); use the Actions Node toolchain + cmd.exe.
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
     - name: "npm install"
-      shell: msys2 {0}
-      run: |
-        cd assets && npm install
+      shell: cmd
+      working-directory: assets
+      run: npm install
 
     - name: Restore Windows compile + assets output
       uses: actions/cache/restore@v4
@@ -631,10 +646,15 @@ jobs:
         test -d "$GITHUB_WORKSPACE/_build/prod" || { echo "Missing _build/prod after cache restore" >&2; exit 1; }
         test -d "$GITHUB_WORKSPACE/_build/prod/rel" || { echo "Missing release output — assemble job must complete first." >&2; exit 1; }
 
+    # MSYS2's bundled npm can segfault (exit 139); use the Actions Node toolchain + cmd.exe.
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
     - name: "npm install"
-      shell: msys2 {0}
-      run: |
-        cd assets && npm install
+      shell: cmd
+      working-directory: assets
+      run: npm install
 
     - name: "Build Release"
       env:
