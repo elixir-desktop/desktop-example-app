@@ -328,20 +328,27 @@ jobs:
       working-directory: assets
       run: npm install
 
+    # Elixir is installed under MSYS $HOME; MSVC deps.compile needs a cmd-accessible path (exqlite uses MSVC/cl).
+    - name: Export Elixir bin path for MSVC deps compile
+      shell: msys2 {0}
+      run: echo "ELIXIR_BIN_WIN=$(cygpath -aw "$HOME/elixir/bin")" >> "$GITHUB_ENV"
+
+    # Erlang/OTP Windows installer is MSVC-built; NIFs must not use MSYS2 gcc against OTP headers (see exqlite guides/windows.md).
+    - uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64
+
     - name: Compile prod dependencies (Mix only)
       env:
-        MAKE: make
-        MAKEFLAGS: -j4
-        REBAR_TARGET_ARCH_WORDSIZE: 64
-        REBAR_TARGET_ARCH: x86_64-w64-mingw32
-        # Elixir 1.19+: parallel OS processes for deps (native/NIF builds); cuts wall time vs 1.16.
+        MIX_ENV: prod
+        # Elixir 1.19+: parallel deps compile processes (native/NIF); MSVC tools coexist with MSYS make/nmake.
         MIX_OS_DEPS_COMPILE_PARTITION_COUNT: "4"
-      shell: msys2 {0}
+      shell: cmd
       run: |
-        set -euo pipefail
-        export MIX_HOME="$GITHUB_WORKSPACE/.ci_mix_home"
-        export HEX_HOME="$GITHUB_WORKSPACE/.ci_hex_home"
-        export MIX_ENV=prod
+        set "MIX_HOME=%GITHUB_WORKSPACE%\.ci_mix_home"
+        set "HEX_HOME=%GITHUB_WORKSPACE%\.ci_hex_home"
+        set "PATH=C:\Program Files\Erlang OTP\bin;%ELIXIR_BIN_WIN%;%PATH%"
+        cd /d "%GITHUB_WORKSPACE%"
         mix deps.compile
 
     - name: Save Windows deps compile cache
