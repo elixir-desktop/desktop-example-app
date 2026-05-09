@@ -876,12 +876,18 @@ jobs:
       working-directory: assets
       run: npm install
 
+    # If WIN32_KEY_PASS is set to "" (missing secret), desktop_deployment still
+    # attempts signing and osslsigncode misparses -pass, breaking -n "The ...".
+    # Only export the variable when the secret is non-empty so CI skips signing.
+    - name: Export WIN32_KEY_PASS for code signing (optional)
+      if: ${{ secrets.WIN32_KEY_PASS != '' }}
+      run: echo "WIN32_KEY_PASS=${{ secrets.WIN32_KEY_PASS }}" >> "$GITHUB_ENV"
+
     - name: "Build Release"
       env:
         MAKE: make
         REBAR_TARGET_ARCH_WORDSIZE: 64
         REBAR_TARGET_ARCH: x86_64-w64-mingw32
-        WIN32_KEY_PASS: ${{ secrets.WIN32_KEY_PASS }}
       shell: msys2 {0}
       run: |
         set -euo pipefail
