@@ -139,8 +139,8 @@ jobs:
         path: "c:\\opt\\otp.exe"
         key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-v4
 
-  # deps.compile vs mix compile each can approach GitHub's 360m/job limit on Windows.
-  windows-deps-compile:
+  # mix deps.get vs deps.compile each need up to 360m on Windows when caches are cold.
+  windows-mix-deps:
     runs-on: windows-latest
     needs: windows-toolchain
     timeout-minutes: 360
@@ -149,7 +149,7 @@ jobs:
         shell: wsl-bash {0}
     env:
       GIT_LFS_SKIP_SMUDGE: "1"
-    name: Build Windows deps compile (prod)
+    name: Build Windows Mix deps (fetch)
     steps:
     - name: Restore Windows Cache
       uses: actions/cache/restore@v3
@@ -217,12 +217,13 @@ jobs:
         key: windows-mix-${{ hashFiles('mix.lock') }}-elixir-${{ env.ELIXIR_VERSION }}
 
     - name: "Get dependencies"
+      if: steps.mix-cache.outputs.cache-hit != 'true'
       shell: msys2 {0}
       run: |
         set -euo pipefail
         export MIX_HOME="$GITHUB_WORKSPACE/.ci_mix_home"
         export HEX_HOME="$GITHUB_WORKSPACE/.ci_hex_home"
-        export HEX_HTTP_CONCURRENCY=8
+        export HEX_HTTP_CONCURRENCY=16
         export GIT_TERMINAL_PROMPT=0
         git config --global http.lowSpeedLimit 500
         git config --global http.lowSpeedTime 120
@@ -234,6 +235,83 @@ jobs:
     - name: Save Mix / Hex cache
       if: steps.mix-cache.outputs.cache-hit != 'true'
       uses: actions/cache/save@v4
+      with:
+        path: |
+          deps
+          .ci_mix_home
+          .ci_hex_home
+        key: windows-mix-${{ hashFiles('mix.lock') }}-elixir-${{ env.ELIXIR_VERSION }}
+
+
+  windows-deps-compile:
+    runs-on: windows-latest
+    needs: windows-mix-deps
+    timeout-minutes: 360
+    defaults:
+      run:
+        shell: wsl-bash {0}
+    env:
+      GIT_LFS_SKIP_SMUDGE: "1"
+    name: Build Windows deps compile (prod)
+    steps:
+    - name: Restore Windows Cache
+      uses: actions/cache/restore@v3
+      id: win32-cache
+      with:
+        path: "c:\\opt\\otp.exe"
+        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-v4
+
+    - name: Verify OTP installer exists
+      shell: cmd
+      run: |
+        if not exist "C:\opt\otp.exe" (
+          echo Missing C:\opt\otp.exe - toolchain job should have restored or built it. >&2
+          exit /b 1
+        )
+
+    - name: Install NSIS for installer step
+      shell: cmd
+      run: choco install nsis -y
+
+    - name: Run Erlang installer
+      shell: cmd
+      run: C:\\opt\\otp.exe /S
+
+    - name: "Install msys2"
+      uses: msys2/setup-msys2@v2
+      with:
+          install: pacman-mirrors pkg-config base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-go upx mingw-w64-x86_64-dlfcn unzip git tar mingw-w64-x86_64-nodejs mingw-w64-x86_64-imagemagick mingw-w64-x86_64-osslsigncode autoconf automake libtool gettext-devel gettext
+          update: true
+
+    - name: Locate Erlang
+      shell: msys2 {0}
+      run: |
+        ERTS=`find /c/Program\ Files/[Ee]rl* -type d -name "erts-*" -not -path "*lib*"`
+        echo $ERTS
+        echo export PATH=\"\$PATH:$ERTS/bin\" > $HOME/.bashrc
+
+    - name: Locate NSIS
+      shell: msys2 {0}
+      run: |
+        echo export PATH=\"\$PATH:/c/Program\ Files\ \(x86\)/NSIS\" >> $HOME/.bashrc
+
+    - name: Install Elixir
+      shell: msys2 {0}
+      run: |
+        cd $HOME
+        git clone --depth 1 --branch v${{ env.ELIXIR_VERSION }} --single-branch https://github.com/elixir-lang/elixir.git
+        cd elixir
+        make
+        echo export PATH=\"\$PATH:$HOME/elixir/bin\" >> $HOME/.bashrc
+
+    - uses: actions/checkout@v4
+      with:
+        lfs: false
+        fetch-depth: 1
+
+    - name: Restore Mix / Hex cache
+      id: mix-cache
+      uses: actions/cache/restore@v4
       with:
         path: |
           deps
