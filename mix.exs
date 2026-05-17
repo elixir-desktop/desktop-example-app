@@ -16,11 +16,7 @@ defmodule Todo.MixProject do
       releases: [
         default_release: [
           applications: [runtime_tools: :permanent, ssl: :permanent],
-          steps: [
-            # &Desktop.Deployment.prepare_release/1,
-            :assemble,
-            &Desktop.Deployment.generate_installer/1
-          ]
+          steps: release_steps()
         ]
       ]
     ]
@@ -30,6 +26,30 @@ defmodule Todo.MixProject do
     [
       preferred_envs: [precommit: :test]
     ]
+  end
+
+  # Desktop installers are only produced for desktop targets. Mobile releases
+  # (e.g. MIX_TARGET=android for the APK) must stop at :assemble; the
+  # installer step invokes tooling that is not available on CI and is not used
+  # for embedded zip packaging.
+  defp release_steps do
+    case Mix.target() do
+      target when target in [:android, :ios] ->
+        [:assemble]
+
+      _ ->
+        # CI can assemble in one Windows job and run NSIS packaging in the next (separate 360m budget).
+        case System.get_env("DESKTOP_CI_RELEASE_PHASE") do
+          "assemble" ->
+            [:assemble]
+
+          _ ->
+            [
+              :assemble,
+              &Desktop.Deployment.generate_installer/1
+            ]
+        end
+    end
   end
 
   # Specifies which paths to compile per environment.
@@ -90,8 +110,11 @@ defmodule Todo.MixProject do
     deps_list = [
       # {:desktop, path: "../desktop"},
       # {:desktop, "~> 1.5"},
-      {:desktop, github: "elixir-desktop/desktop"},
-      {:desktop_deployment, github: "elixir-desktop/deployment"},
+      # Pinned SHAs for reproducible CI. Do not add :depth with :ref — Android CI uses Elixir 1.17, where Mix forbids that pair.
+      {:desktop,
+       github: "elixir-desktop/desktop", ref: "0966857094b6ceaec6789fae65b74478bfc8be19"},
+      {:desktop_deployment,
+       github: "elixir-desktop/deployment", ref: "c5c09864693121acb7e6de0f8f3253937ed2e07c"},
       {:igniter, "~> 0.6"},
       # {:desktop_deployment, path: "../deployment", runtime: false},
 
@@ -100,7 +123,10 @@ defmodule Todo.MixProject do
       {:phoenix_ecto, "~> 4.5"},
       {:ecto_sqlite3, "~> 0.22.0"},
       # Pinned to the same version as the android runtime binary nifs.
-      {:exqlite, github: "elixir-desktop/exqlite", override: true},
+      {:exqlite,
+       github: "elixir-desktop/exqlite",
+       ref: "1caf1f42395fff8a68ac5a509f7294090a6f6f0d",
+       override: true},
       {:phoenix_html, "~> 4.1"},
       {:phoenix_live_dashboard, "~> 0.8.3"},
       {:phoenix_live_reload, "~> 1.2", only: :dev},

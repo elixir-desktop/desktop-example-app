@@ -50,7 +50,7 @@ RUN cd ~/projects/wxWidgets && \
 ENV OTP_VERSION=25.3.2.6
 ENV ELIXIR_VERSION=1.13.4
 ENV ASDF_DIR=/root/.asdf
-RUN git clone https://github.com/asdf-vm/asdf.git ${ASDF_DIR} && \
+RUN git clone https://github.com/asdf-vm/asdf.git ${ASDF_DIR} --branch v0.18.1 --depth 1 && \
     . ${ASDF_DIR}/asdf.sh && \
     asdf plugin add erlang && \
     asdf plugin add elixir && \

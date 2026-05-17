@@ -5,17 +5,20 @@ env:
   OTP_VERSION: OTP-26.2.5.9_diode
   WXWIDGETS_REPO: https://github.com/wxWidgets/wxWidgets.git
   WXWIDGETS_VERSION: v3.2.6
-  ELIXIR_VERSION: 1.16.3
+  ELIXIR_VERSION: 1.19.5
   ELIXIR_VARIANT: -otp-26
   DOCKER_BUILDKIT: 0
 
 jobs:
-  windows:
+  # wxWidgets + OTP compile alone can approach GitHub's 360m/job limit; splitting gives toolchain + Mix two budgets.
+  windows-toolchain:
     runs-on: windows-latest
-    timeout-minutes: 90
+    timeout-minutes: 360
     defaults:
       run:
         shell: wsl-bash {0}
+    env:
+      GIT_LFS_SKIP_SMUDGE: "1"
     name: Build Erlang/OTP (Windows)
     steps:
     - name: Restore Windows Cache
@@ -23,34 +26,71 @@ jobs:
       id: win32-cache
       with:
         path: "c:\\opt\\otp.exe"
-        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}
-  
+        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-v4
+
     - uses: Vampire/setup-wsl@v2
       if: steps.win32-cache.outputs.cache-hit != 'true'
       with:
-        distribution: Ubuntu-18.04
+        distribution: Ubuntu-22.04
 
     - name: Install WSL dependencies
       if: steps.win32-cache.outputs.cache-hit != 'true'
-      run: apt update && apt install -y g++-mingw-w64 gcc-mingw-w64 make autoconf unzip
+      run: |
+        set -euo pipefail
+        export DEBIAN_FRONTEND=noninteractive
+        for attempt in 1 2 3 4 5; do
+          if apt-get update && apt-get install -y g++-mingw-w64 gcc-mingw-w64 make autoconf unzip; then
+            break
+          fi
+          echo "apt-get failed (attempt $attempt), retrying in 45s..." >&2
+          sleep 45
+          if [ "$attempt" -eq 5 ]; then
+            echo "apt-get install failed after 5 attempts" >&2
+            exit 1
+          fi
+        done
 
-    - name: Install openssl
+    - name: Install openssl and NSIS (Windows)
       if: steps.win32-cache.outputs.cache-hit != 'true'
       shell: cmd
       run: |
-        choco install openssl --version=1.1.1.2100
-        IF EXIST "c:\\Program Files\\OpenSSL-Win64" (move "c:\\Program Files\\OpenSSL-Win64" "c:\\OpenSSL-Win64") ELSE (move "c:\\Program Files\\OpenSSL" "c:\\OpenSSL-Win64")
- 
+        choco install openssl --version=1.1.1.2100 -y
+        choco install nsis -y
+        if exist "C:\\Program Files\\OpenSSL-Win64" (
+          xcopy "C:\\Program Files\\OpenSSL-Win64" "C:\\OpenSSL-Win64\\" /E /I /H /Y /Q
+        ) else if exist "C:\\Program Files\\OpenSSL" (
+          xcopy "C:\\Program Files\\OpenSSL" "C:\\OpenSSL-Win64\\" /E /I /H /Y /Q
+        )
+
+    - name: Wire Windows NSIS into WSL PATH
+      if: steps.win32-cache.outputs.cache-hit != 'true'
+      run: |
+        NSIS="/mnt/c/Program Files (x86)/NSIS/makensis.exe"
+        if [ ! -f "$NSIS" ]; then
+          NSIS="/mnt/c/Program Files/NSIS/makensis.exe"
+        fi
+        if [ ! -f "$NSIS" ]; then
+          echo "Windows NSIS makensis.exe not found after choco install" >&2
+          exit 1
+        fi
+        install -d /usr/local/bin
+        printf '%s\n' '#!/bin/sh' "exec \"$NSIS\" \"\$@\"" > /usr/local/bin/makensis.exe
+        chmod +x /usr/local/bin/makensis.exe
+
     - name: Download wxWidgets
       if: steps.win32-cache.outputs.cache-hit != 'true'
       run: |
-        git clone ${{ env.WXWIDGETS_REPO }}
+        set -euo pipefail
+        cd "${GITHUB_WORKSPACE}"
+        git config --global http.lowSpeedLimit 500
+        git config --global http.lowSpeedTime 120
+        git config --global http.postBuffer 524288000
+        git clone --depth 1 --branch ${{ env.WXWIDGETS_VERSION }} --single-branch ${{ env.WXWIDGETS_REPO }} wxWidgets
         cd wxWidgets
-        git checkout ${{ env.WXWIDGETS_VERSION }}
-        git submodule update --init
+        git submodule update --init --depth 1
         sed -i -r -e 's/wxUSE_POSTSCRIPT +0/wxUSE_POSTSCRIPT 1/' include/wx/msw/setup.h
-        sed -i -r -e 's/wxUSE_WEBVIEW_EDGE +0/wxUSE_WEBVIEW_EDGE 1/' include/wx/msw/setup.h        
-        sed -i -r -e 's/WXWIN_COMPATIBILITY_3_0 +0/WXWIN_COMPATIBILITY_3_0 1/' include/wx/msw/setup.h        
+        sed -i -r -e 's/wxUSE_WEBVIEW_EDGE +0/wxUSE_WEBVIEW_EDGE 1/' include/wx/msw/setup.h
+        sed -i -r -e 's/WXWIN_COMPATIBILITY_3_0 +0/WXWIN_COMPATIBILITY_3_0 1/' include/wx/msw/setup.h
 
     - name: Install WebView2
       if: steps.win32-cache.outputs.cache-hit != 'true'
@@ -77,15 +117,16 @@ jobs:
     - name: Compile Erlang
       if: steps.win32-cache.outputs.cache-hit != 'true'
       run: |
-        git clone ${{ env.OTP_GITHUB_URL }}
+        set -euo pipefail
+        cd "${GITHUB_WORKSPACE}"
+        git clone --depth 1 --branch ${{ env.OTP_VERSION }} --single-branch ${{ env.OTP_GITHUB_URL }} otp
         cd otp
-        git checkout ${{ env.OTP_VERSION }}
         export ERL_TOP=`pwd`
         export MAKEFLAGS=-j$(($(nproc) + 2))
         export ERLC_USE_SERVER=true
         export ERTS_SKIP_DEPEND=true
         eval `./otp_build env_win32 x64`
-        ./otp_build all -a 
+        ./otp_build all -a
         cp /mnt/c/opt/local64/pgm/wxWidgets-3.x.x/3rdparty/webview2/runtimes/win-x64/native/WebView2Loader.dll $ERL_TOP/release/win32/erts-*/bin/
         ./otp_build installer_win32
         export NAME=`ls release/win32/otp*.exe`
@@ -96,8 +137,39 @@ jobs:
       uses: actions/cache/save@v3
       with:
         path: "c:\\opt\\otp.exe"
-        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}
-  
+        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-v4
+
+  # mix deps.get vs deps.compile each need up to 360m on Windows when caches are cold.
+  windows-mix-deps:
+    runs-on: windows-latest
+    needs: windows-toolchain
+    timeout-minutes: 360
+    defaults:
+      run:
+        shell: wsl-bash {0}
+    env:
+      GIT_LFS_SKIP_SMUDGE: "1"
+    name: Build Windows Mix deps (fetch)
+    steps:
+    - name: Restore Windows Cache
+      uses: actions/cache/restore@v3
+      id: win32-cache
+      with:
+        path: "c:\\opt\\otp.exe"
+        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-v4
+
+    - name: Verify OTP installer exists
+      shell: cmd
+      run: |
+        if not exist "C:\opt\otp.exe" (
+          echo Missing C:\opt\otp.exe - toolchain job should have restored or built it. >&2
+          exit /b 1
+        )
+
+    - name: Install NSIS for installer step
+      shell: cmd
+      run: choco install nsis -y
+
     - name: Run Erlang installer
       shell: cmd
       run: C:\\opt\\otp.exe /S
@@ -119,40 +191,715 @@ jobs:
       shell: msys2 {0}
       run: |
         echo export PATH=\"\$PATH:/c/Program\ Files\ \(x86\)/NSIS\" >> $HOME/.bashrc
-    
+
     - name: Install Elixir
       shell: msys2 {0}
       run: |
         cd $HOME
-        git clone https://github.com/elixir-lang/elixir.git
+        git clone --depth 1 --branch v${{ env.ELIXIR_VERSION }} --single-branch https://github.com/elixir-lang/elixir.git
         cd elixir
-        git checkout v${{ env.ELIXIR_VERSION }}
-        make 
+        make
         echo export PATH=\"\$PATH:$HOME/elixir/bin\" >> $HOME/.bashrc
-    
-    - uses: actions/checkout@v1
+
+    - uses: actions/checkout@v4
+      with:
+        lfs: false
+        fetch-depth: 1
+
+    - name: Restore Mix / Hex cache
+      id: mix-cache
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          deps
+          .ci_mix_home
+          .ci_hex_home
+        key: windows-mix-${{ hashFiles('mix.lock') }}-elixir-${{ env.ELIXIR_VERSION }}
+
+    - name: "Get dependencies"
+      if: steps.mix-cache.outputs.cache-hit != 'true'
+      shell: msys2 {0}
+      run: |
+        set -euo pipefail
+        export MIX_HOME="$GITHUB_WORKSPACE/.ci_mix_home"
+        export HEX_HOME="$GITHUB_WORKSPACE/.ci_hex_home"
+        export HEX_HTTP_CONCURRENCY=16
+        export GIT_TERMINAL_PROMPT=0
+        git config --global http.lowSpeedLimit 500
+        git config --global http.lowSpeedTime 120
+        mkdir -p "$MIX_HOME" "$HEX_HOME"
+        mix local.hex --force
+        mix local.rebar --force
+        MIX_ENV=prod mix deps.get --only prod
+
+    - name: Save Mix / Hex cache
+      if: steps.mix-cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          deps
+          .ci_mix_home
+          .ci_hex_home
+        key: windows-mix-${{ hashFiles('mix.lock') }}-elixir-${{ env.ELIXIR_VERSION }}
+
+
+  windows-deps-compile:
+    runs-on: windows-latest
+    needs: windows-mix-deps
+    timeout-minutes: 360
+    defaults:
+      run:
+        shell: wsl-bash {0}
+    env:
+      GIT_LFS_SKIP_SMUDGE: "1"
+    name: Build Windows deps compile (prod)
+    steps:
+    - name: Restore Windows Cache
+      uses: actions/cache/restore@v3
+      id: win32-cache
+      with:
+        path: "c:\\opt\\otp.exe"
+        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-v4
+
+    - name: Verify OTP installer exists
+      shell: cmd
+      run: |
+        if not exist "C:\opt\otp.exe" (
+          echo Missing C:\opt\otp.exe - toolchain job should have restored or built it. >&2
+          exit /b 1
+        )
+
+    - name: Install NSIS for installer step
+      shell: cmd
+      run: choco install nsis -y
+
+    - name: Run Erlang installer
+      shell: cmd
+      run: C:\\opt\\otp.exe /S
+
+    - name: "Install msys2"
+      uses: msys2/setup-msys2@v2
+      with:
+          install: pacman-mirrors pkg-config base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-go upx mingw-w64-x86_64-dlfcn unzip git tar mingw-w64-x86_64-nodejs mingw-w64-x86_64-imagemagick mingw-w64-x86_64-osslsigncode autoconf automake libtool gettext-devel gettext
+          update: true
+
+    - name: Locate Erlang
+      shell: msys2 {0}
+      run: |
+        ERTS=`find /c/Program\ Files/[Ee]rl* -type d -name "erts-*" -not -path "*lib*"`
+        echo $ERTS
+        echo export PATH=\"\$PATH:$ERTS/bin\" > $HOME/.bashrc
+
+    - name: Locate NSIS
+      shell: msys2 {0}
+      run: |
+        echo export PATH=\"\$PATH:/c/Program\ Files\ \(x86\)/NSIS\" >> $HOME/.bashrc
+
+    - name: Install Elixir
+      shell: msys2 {0}
+      run: |
+        cd $HOME
+        git clone --depth 1 --branch v${{ env.ELIXIR_VERSION }} --single-branch https://github.com/elixir-lang/elixir.git
+        cd elixir
+        make
+        echo export PATH=\"\$PATH:$HOME/elixir/bin\" >> $HOME/.bashrc
+
+    - uses: actions/checkout@v4
+      with:
+        lfs: false
+        fetch-depth: 1
+
+    - name: Restore Mix / Hex cache
+      id: mix-cache
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          deps
+          .ci_mix_home
+          .ci_hex_home
+        key: windows-mix-${{ hashFiles('mix.lock') }}-elixir-${{ env.ELIXIR_VERSION }}
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
+    - name: "npm install"
+      shell: cmd
+      working-directory: assets
+      run: npm install
+
+    # Elixir is installed under MSYS $HOME; MSVC deps.compile needs a cmd-accessible path (exqlite uses MSVC/cl).
+    - name: Export Elixir bin path for MSVC deps compile
+      shell: msys2 {0}
+      run: echo "ELIXIR_BIN_WIN=$(cygpath -aw "$HOME/elixir/bin")" >> "$GITHUB_ENV"
+
+    # Erlang/OTP Windows installer is MSVC-built; NIFs must not use MSYS2 gcc against OTP headers (see exqlite guides/windows.md).
+    - uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: x64
+
+    - name: Compile prod dependencies (Mix only)
+      env:
+        MIX_ENV: prod
+        # Elixir 1.19+: parallel deps compile processes (native/NIF); MSVC tools coexist with MSYS make/nmake.
+        MIX_OS_DEPS_COMPILE_PARTITION_COUNT: "4"
+      shell: cmd
+      run: |
+        set "MIX_HOME=%GITHUB_WORKSPACE%\.ci_mix_home"
+        set "HEX_HOME=%GITHUB_WORKSPACE%\.ci_hex_home"
+        set "PATH=C:\Program Files\Erlang OTP\bin;%ELIXIR_BIN_WIN%;%PATH%"
+        cd /d "%GITHUB_WORKSPACE%"
+        mix deps.compile
+
+    - name: Save Windows deps compile cache
+      uses: actions/cache/save@v4
+      with:
+        path: _build/prod
+        key: windows-mix-deps-compile-${{ hashFiles('mix.lock') }}-elixir-${{ env.ELIXIR_VERSION }}-v1
+
+  windows-compile:
+    runs-on: windows-latest
+    needs: windows-deps-compile
+    timeout-minutes: 360
+    defaults:
+      run:
+        shell: wsl-bash {0}
+    env:
+      GIT_LFS_SKIP_SMUDGE: "1"
+    name: Build Windows compile (prod)
+    steps:
+    - name: Restore Windows Cache
+      uses: actions/cache/restore@v3
+      id: win32-cache
+      with:
+        path: "c:\\opt\\otp.exe"
+        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-v4
+
+    - name: Verify OTP installer exists
+      shell: cmd
+      run: |
+        if not exist "C:\opt\otp.exe" (
+          echo Missing C:\opt\otp.exe - toolchain job should have restored or built it. >&2
+          exit /b 1
+        )
+
+    - name: Install NSIS for installer step
+      shell: cmd
+      run: choco install nsis -y
+
+    - name: Run Erlang installer
+      shell: cmd
+      run: C:\\opt\\otp.exe /S
+
+    - name: "Install msys2"
+      uses: msys2/setup-msys2@v2
+      with:
+          install: pacman-mirrors pkg-config base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-go upx mingw-w64-x86_64-dlfcn unzip git tar mingw-w64-x86_64-nodejs mingw-w64-x86_64-imagemagick mingw-w64-x86_64-osslsigncode autoconf automake libtool gettext-devel gettext
+          update: true
+
+    - name: Locate Erlang
+      shell: msys2 {0}
+      run: |
+        ERTS=`find /c/Program\ Files/[Ee]rl* -type d -name "erts-*" -not -path "*lib*"`
+        echo $ERTS
+        echo export PATH=\"\$PATH:$ERTS/bin\" > $HOME/.bashrc
+
+    - name: Locate NSIS
+      shell: msys2 {0}
+      run: |
+        echo export PATH=\"\$PATH:/c/Program\ Files\ \(x86\)/NSIS\" >> $HOME/.bashrc
+
+    - name: Install Elixir
+      shell: msys2 {0}
+      run: |
+        cd $HOME
+        git clone --depth 1 --branch v${{ env.ELIXIR_VERSION }} --single-branch https://github.com/elixir-lang/elixir.git
+        cd elixir
+        make
+        echo export PATH=\"\$PATH:$HOME/elixir/bin\" >> $HOME/.bashrc
+
+    - uses: actions/checkout@v4
+      with:
+        lfs: false
+        fetch-depth: 1
+
+    - name: Restore Mix / Hex cache
+      id: mix-cache
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          deps
+          .ci_mix_home
+          .ci_hex_home
+        key: windows-mix-${{ hashFiles('mix.lock') }}-elixir-${{ env.ELIXIR_VERSION }}
 
     - name: "Get dependencies"
       shell: msys2 {0}
       run: |
+        set -euo pipefail
+        export MIX_HOME="$GITHUB_WORKSPACE/.ci_mix_home"
+        export HEX_HOME="$GITHUB_WORKSPACE/.ci_hex_home"
+        export HEX_HTTP_CONCURRENCY=8
+        export GIT_TERMINAL_PROMPT=0
+        git config --global http.lowSpeedLimit 500
+        git config --global http.lowSpeedTime 120
+        mkdir -p "$MIX_HOME" "$HEX_HOME"
         mix local.hex --force
         mix local.rebar --force
-        mix deps.get
+        MIX_ENV=prod mix deps.get --only prod
+
+    # MSYS2's bundled npm can segfault (exit 139); use the Actions Node toolchain + cmd.exe.
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
 
     - name: "npm install"
+      shell: cmd
+      working-directory: assets
+      run: npm install
+
+    - name: Restore Windows deps compile output
+      uses: actions/cache/restore@v4
+      id: deps-compile-cache
+      with:
+        path: _build/prod
+        key: windows-mix-deps-compile-${{ hashFiles('mix.lock') }}-elixir-${{ env.ELIXIR_VERSION }}-v1
+
+    - name: Verify deps compile output
       shell: msys2 {0}
       run: |
-        cd assets && npm install
+        set -euo pipefail
+        test -d "$GITHUB_WORKSPACE/_build/prod/lib" || { echo "Missing deps-compiled _build/prod from deps job." >&2; exit 1; }
+
+    - name: Compile prod application (Mix only)
+      env:
+        MAKE: make
+        REBAR_TARGET_ARCH_WORDSIZE: 64
+        REBAR_TARGET_ARCH: x86_64-w64-mingw32
+      shell: msys2 {0}
+      run: |
+        set -euo pipefail
+        export MIX_HOME="$GITHUB_WORKSPACE/.ci_mix_home"
+        export HEX_HOME="$GITHUB_WORKSPACE/.ci_hex_home"
+        export MIX_ENV=prod
+        mix compile
+
+    - name: Save Windows Mix compile cache
+      uses: actions/cache/save@v4
+      with:
+        path: _build/prod
+        key: windows-job-compile-${{ hashFiles('mix.lock') }}-elixir-${{ env.ELIXIR_VERSION }}-v1
+
+  windows-assets:
+    runs-on: windows-latest
+    needs: windows-compile
+    timeout-minutes: 360
+    defaults:
+      run:
+        shell: wsl-bash {0}
+    env:
+      GIT_LFS_SKIP_SMUDGE: "1"
+    name: Build Windows assets
+    steps:
+    - name: Restore Windows Cache
+      uses: actions/cache/restore@v3
+      id: win32-cache
+      with:
+        path: "c:\\opt\\otp.exe"
+        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-v4
+
+    - name: Verify OTP installer exists
+      shell: cmd
+      run: |
+        if not exist "C:\opt\otp.exe" (
+          echo Missing C:\opt\otp.exe - toolchain job should have restored or built it. >&2
+          exit /b 1
+        )
+
+    - name: Install NSIS for installer step
+      shell: cmd
+      run: choco install nsis -y
+
+    - name: Run Erlang installer
+      shell: cmd
+      run: C:\\opt\\otp.exe /S
+
+    - name: "Install msys2"
+      uses: msys2/setup-msys2@v2
+      with:
+          install: pacman-mirrors pkg-config base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-go upx mingw-w64-x86_64-dlfcn unzip git tar mingw-w64-x86_64-nodejs mingw-w64-x86_64-imagemagick mingw-w64-x86_64-osslsigncode autoconf automake libtool gettext-devel gettext
+          update: true
+
+    - name: Locate Erlang
+      shell: msys2 {0}
+      run: |
+        ERTS=`find /c/Program\ Files/[Ee]rl* -type d -name "erts-*" -not -path "*lib*"`
+        echo $ERTS
+        echo export PATH=\"\$PATH:$ERTS/bin\" > $HOME/.bashrc
+
+    - name: Locate NSIS
+      shell: msys2 {0}
+      run: |
+        echo export PATH=\"\$PATH:/c/Program\ Files\ \(x86\)/NSIS\" >> $HOME/.bashrc
+
+    - name: Install Elixir
+      shell: msys2 {0}
+      run: |
+        cd $HOME
+        git clone --depth 1 --branch v${{ env.ELIXIR_VERSION }} --single-branch https://github.com/elixir-lang/elixir.git
+        cd elixir
+        make
+        echo export PATH=\"\$PATH:$HOME/elixir/bin\" >> $HOME/.bashrc
+
+    - uses: actions/checkout@v4
+      with:
+        lfs: false
+        fetch-depth: 1
+
+    - name: Restore Mix / Hex cache
+      id: mix-cache
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          deps
+          .ci_mix_home
+          .ci_hex_home
+        key: windows-mix-${{ hashFiles('mix.lock') }}-elixir-${{ env.ELIXIR_VERSION }}
+
+    - name: "Get dependencies"
+      shell: msys2 {0}
+      run: |
+        set -euo pipefail
+        export MIX_HOME="$GITHUB_WORKSPACE/.ci_mix_home"
+        export HEX_HOME="$GITHUB_WORKSPACE/.ci_hex_home"
+        export HEX_HTTP_CONCURRENCY=8
+        export GIT_TERMINAL_PROMPT=0
+        git config --global http.lowSpeedLimit 500
+        git config --global http.lowSpeedTime 120
+        mkdir -p "$MIX_HOME" "$HEX_HOME"
+        mix local.hex --force
+        mix local.rebar --force
+        MIX_ENV=prod mix deps.get --only prod
+
+    # MSYS2's bundled npm can segfault (exit 139); use the Actions Node toolchain + cmd.exe.
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
+    - name: "npm install"
+      shell: cmd
+      working-directory: assets
+      run: npm install
+
+    - name: Restore Windows Mix compile output
+      uses: actions/cache/restore@v4
+      id: compile-job-cache
+      with:
+        path: _build/prod
+        key: windows-job-compile-${{ hashFiles('mix.lock') }}-elixir-${{ env.ELIXIR_VERSION }}-v1
+
+    - name: Verify compile output
+      shell: msys2 {0}
+      run: |
+        set -euo pipefail
+        test -d "$GITHUB_WORKSPACE/_build/prod/lib" || { echo "Missing compiled _build/prod from compile job." >&2; exit 1; }
+
+    - name: Digest Phoenix assets
+      env:
+        MAKE: make
+        REBAR_TARGET_ARCH_WORDSIZE: 64
+        REBAR_TARGET_ARCH: x86_64-w64-mingw32
+      shell: msys2 {0}
+      run: |
+        set -euo pipefail
+        export MIX_HOME="$GITHUB_WORKSPACE/.ci_mix_home"
+        export HEX_HOME="$GITHUB_WORKSPACE/.ci_hex_home"
+        export MIX_ENV=prod
+        mix assets.deploy
+
+    - name: Save Windows compile + assets cache
+      uses: actions/cache/save@v4
+      with:
+        path: |
+          _build/prod
+          priv/static
+        key: windows-job-assets-${{ hashFiles('mix.lock') }}-elixir-${{ env.ELIXIR_VERSION }}-v1
+
+  windows-assemble:
+    runs-on: windows-latest
+    needs: windows-assets
+    timeout-minutes: 360
+    defaults:
+      run:
+        shell: wsl-bash {0}
+    env:
+      GIT_LFS_SKIP_SMUDGE: "1"
+    name: Build Windows release (assemble)
+    steps:
+    - name: Restore Windows Cache
+      uses: actions/cache/restore@v3
+      id: win32-cache
+      with:
+        path: "c:\\opt\\otp.exe"
+        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-v4
+
+    - name: Verify OTP installer exists
+      shell: cmd
+      run: |
+        if not exist "C:\opt\otp.exe" (
+          echo Missing C:\opt\otp.exe - toolchain job should have restored or built it. >&2
+          exit /b 1
+        )
+
+    - name: Install NSIS for installer step
+      shell: cmd
+      run: choco install nsis -y
+
+    - name: Run Erlang installer
+      shell: cmd
+      run: C:\\opt\\otp.exe /S
+
+    - name: "Install msys2"
+      uses: msys2/setup-msys2@v2
+      with:
+          install: pacman-mirrors pkg-config base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-go upx mingw-w64-x86_64-dlfcn unzip git tar mingw-w64-x86_64-nodejs mingw-w64-x86_64-imagemagick mingw-w64-x86_64-osslsigncode autoconf automake libtool gettext-devel gettext
+          update: true
+
+    - name: Locate Erlang
+      shell: msys2 {0}
+      run: |
+        ERTS=`find /c/Program\ Files/[Ee]rl* -type d -name "erts-*" -not -path "*lib*"`
+        echo $ERTS
+        echo export PATH=\"\$PATH:$ERTS/bin\" > $HOME/.bashrc
+
+    - name: Locate NSIS
+      shell: msys2 {0}
+      run: |
+        echo export PATH=\"\$PATH:/c/Program\ Files\ \(x86\)/NSIS\" >> $HOME/.bashrc
+
+    - name: Install Elixir
+      shell: msys2 {0}
+      run: |
+        cd $HOME
+        git clone --depth 1 --branch v${{ env.ELIXIR_VERSION }} --single-branch https://github.com/elixir-lang/elixir.git
+        cd elixir
+        make
+        echo export PATH=\"\$PATH:$HOME/elixir/bin\" >> $HOME/.bashrc
+
+    - uses: actions/checkout@v4
+      with:
+        lfs: false
+        fetch-depth: 1
+
+    - name: Restore Mix / Hex cache
+      id: mix-cache
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          deps
+          .ci_mix_home
+          .ci_hex_home
+        key: windows-mix-${{ hashFiles('mix.lock') }}-elixir-${{ env.ELIXIR_VERSION }}
+
+    - name: "Get dependencies"
+      shell: msys2 {0}
+      run: |
+        set -euo pipefail
+        export MIX_HOME="$GITHUB_WORKSPACE/.ci_mix_home"
+        export HEX_HOME="$GITHUB_WORKSPACE/.ci_hex_home"
+        export HEX_HTTP_CONCURRENCY=8
+        export GIT_TERMINAL_PROMPT=0
+        git config --global http.lowSpeedLimit 500
+        git config --global http.lowSpeedTime 120
+        mkdir -p "$MIX_HOME" "$HEX_HOME"
+        mix local.hex --force
+        mix local.rebar --force
+        MIX_ENV=prod mix deps.get --only prod
+
+    # MSYS2's bundled npm can segfault (exit 139); use the Actions Node toolchain + cmd.exe.
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
+    - name: "npm install"
+      shell: cmd
+      working-directory: assets
+      run: npm install
+
+    - name: Restore Windows compile + assets output
+      uses: actions/cache/restore@v4
+      id: compile-cache
+      with:
+        path: |
+          _build/prod
+          priv/static
+        key: windows-job-assets-${{ hashFiles('mix.lock') }}-elixir-${{ env.ELIXIR_VERSION }}-v1
+
+    - name: Verify compile + assets output from prior job
+      shell: msys2 {0}
+      run: |
+        set -euo pipefail
+        test -d "$GITHUB_WORKSPACE/_build/prod/lib" || { echo "Missing compiled _build/prod — assets job must run first." >&2; exit 1; }
+
+    - name: Assemble prod release (no NSIS yet)
+      env:
+        MAKE: make
+        REBAR_TARGET_ARCH_WORDSIZE: 64
+        REBAR_TARGET_ARCH: x86_64-w64-mingw32
+        DESKTOP_CI_RELEASE_PHASE: assemble
+      shell: msys2 {0}
+      run: |
+        set -euo pipefail
+        export MIX_HOME="$GITHUB_WORKSPACE/.ci_mix_home"
+        export HEX_HOME="$GITHUB_WORKSPACE/.ci_hex_home"
+        export MIX_ENV=prod
+        mix release default_release --overwrite
+
+    - name: Save Windows prod _build cache
+      uses: actions/cache/save@v4
+      with:
+        path: _build/prod
+        key: windows-prod-assemble-${{ hashFiles('mix.lock') }}-elixir-${{ env.ELIXIR_VERSION }}-v1
+
+  windows-package:
+    runs-on: windows-latest
+    needs: windows-assemble
+    timeout-minutes: 360
+    defaults:
+      run:
+        shell: wsl-bash {0}
+    env:
+      GIT_LFS_SKIP_SMUDGE: "1"
+    name: Build Windows installer
+    steps:
+    - name: Restore Windows Cache
+      uses: actions/cache/restore@v3
+      id: win32-cache
+      with:
+        path: "c:\\opt\\otp.exe"
+        key: win32-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-v4
+
+    - name: Verify OTP installer exists
+      shell: cmd
+      run: |
+        if not exist "C:\opt\otp.exe" (
+          echo Missing C:\opt\otp.exe - toolchain job should have restored or built it. >&2
+          exit /b 1
+        )
+
+    - name: Install NSIS for installer step
+      shell: cmd
+      run: choco install nsis -y
+
+    - name: Run Erlang installer
+      shell: cmd
+      run: C:\\opt\\otp.exe /S
+
+    - name: "Install msys2"
+      uses: msys2/setup-msys2@v2
+      with:
+          install: pacman-mirrors pkg-config base-devel mingw-w64-x86_64-toolchain mingw-w64-x86_64-go upx mingw-w64-x86_64-dlfcn unzip git tar mingw-w64-x86_64-nodejs mingw-w64-x86_64-imagemagick mingw-w64-x86_64-osslsigncode autoconf automake libtool gettext-devel gettext
+          update: true
+
+    - name: Locate Erlang
+      shell: msys2 {0}
+      run: |
+        ERTS=`find /c/Program\ Files/[Ee]rl* -type d -name "erts-*" -not -path "*lib*"`
+        echo $ERTS
+        echo export PATH=\"\$PATH:$ERTS/bin\" > $HOME/.bashrc
+
+    - name: Locate NSIS
+      shell: msys2 {0}
+      run: |
+        echo export PATH=\"\$PATH:/c/Program\ Files\ \(x86\)/NSIS\" >> $HOME/.bashrc
+
+    - name: Install Elixir
+      shell: msys2 {0}
+      run: |
+        cd $HOME
+        git clone --depth 1 --branch v${{ env.ELIXIR_VERSION }} --single-branch https://github.com/elixir-lang/elixir.git
+        cd elixir
+        make
+        echo export PATH=\"\$PATH:$HOME/elixir/bin\" >> $HOME/.bashrc
+
+    - uses: actions/checkout@v4
+      with:
+        lfs: false
+        fetch-depth: 1
+
+    - name: Restore Mix / Hex cache
+      id: mix-cache
+      uses: actions/cache/restore@v4
+      with:
+        path: |
+          deps
+          .ci_mix_home
+          .ci_hex_home
+        key: windows-mix-${{ hashFiles('mix.lock') }}-elixir-${{ env.ELIXIR_VERSION }}
+
+    - name: "Get dependencies"
+      shell: msys2 {0}
+      run: |
+        set -euo pipefail
+        export MIX_HOME="$GITHUB_WORKSPACE/.ci_mix_home"
+        export HEX_HOME="$GITHUB_WORKSPACE/.ci_hex_home"
+        export HEX_HTTP_CONCURRENCY=8
+        export GIT_TERMINAL_PROMPT=0
+        git config --global http.lowSpeedLimit 500
+        git config --global http.lowSpeedTime 120
+        mkdir -p "$MIX_HOME" "$HEX_HOME"
+        mix local.hex --force
+        mix local.rebar --force
+        MIX_ENV=prod mix deps.get --only prod
+
+    - name: Restore Windows prod _build
+      id: prod-build
+      uses: actions/cache/restore@v4
+      with:
+        path: _build/prod
+        key: windows-prod-assemble-${{ hashFiles('mix.lock') }}-elixir-${{ env.ELIXIR_VERSION }}-v1
+
+    - name: Verify prod build from assemble job
+      shell: msys2 {0}
+      run: |
+        set -euo pipefail
+        test -d "$GITHUB_WORKSPACE/_build/prod" || { echo "Missing _build/prod after cache restore" >&2; exit 1; }
+        test -d "$GITHUB_WORKSPACE/_build/prod/rel" || { echo "Missing release output — assemble job must complete first." >&2; exit 1; }
+
+    # MSYS2's bundled npm can segfault (exit 139); use the Actions Node toolchain + cmd.exe.
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '22'
+
+    - name: "npm install"
+      shell: cmd
+      working-directory: assets
+      run: npm install
+
+    # If WIN32_KEY_PASS is set to "" (missing secret), desktop_deployment still
+    # attempts signing and osslsigncode misparses -pass, breaking -n "The ...".
+    # Only export the variable when the secret is non-empty so CI skips signing.
+    # Note: secrets context is not available in `if:` conditionals, so the
+    # check is done inside the shell instead.
+    - name: Export WIN32_KEY_PASS for code signing (optional)
+      env:
+        WIN32_KEY_PASS: ${{ secrets.WIN32_KEY_PASS }}
+      run: |
+        if [ -n "$WIN32_KEY_PASS" ]; then
+          echo "WIN32_KEY_PASS=$WIN32_KEY_PASS" >> "$GITHUB_ENV"
+        fi
 
     - name: "Build Release"
       env:
         MAKE: make
-        REBAR_TARGET_ARCH_WORDSIZE: 64 
+        REBAR_TARGET_ARCH_WORDSIZE: 64
         REBAR_TARGET_ARCH: x86_64-w64-mingw32
-        WIN32_KEY_PASS: ${{ secrets.WIN32_KEY_PASS }}
       shell: msys2 {0}
       run: |
-        mix assets.deploy
+        set -euo pipefail
+        export MIX_HOME="$GITHUB_WORKSPACE/.ci_mix_home"
+        export HEX_HOME="$GITHUB_WORKSPACE/.ci_hex_home"
+        export MIX_ENV=prod
         mix desktop.installer
 
     - name: Archive Installer
@@ -163,49 +910,78 @@ jobs:
           _build/prod/*.exe
 
   macos:
-    runs-on: macos-13
+    runs-on: macos-15
     steps:
+    # asdf v0.19+ is a Go binary from Homebrew; the old git clone + ~/.asdf/asdf.sh flow is invalid.
+    - name: Install asdf (Homebrew)
+      run: |
+        brew install asdf
+        echo "$(brew --prefix asdf)/bin" >> "$GITHUB_PATH"
+
     - name: macOS Cache
       uses: actions/cache@v3
       id: macos-cache
       with:
         path: /Users/runner/.asdf
-        key: macos-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}
+        key: macos15-wxwidgets-${{ env.WXWIDGETS_VERSION }}-otp-${{ env.OTP_VERSION }}-png-tiff-sys-asdf-brew-kerl-cxx
       
     - name: "Install brew deps"
       if: steps.macos-cache.outputs.cache-hit != 'true'
       run: |
-            brew install binutils coreutils wget automake autoconf libtool
+            brew install binutils coreutils wget automake autoconf libtool libpng libtiff
   
     - name: "Installing wxWidgets"
       if: steps.macos-cache.outputs.cache-hit != 'true'
       run: |
-        mkdir ~/projects && cd ~/projects
-        git clone ${{ env.WXWIDGETS_REPO }}
-        cd wxWidgets; 
-        git checkout ${{ env.WXWIDGETS_VERSION }}
-        git submodule update --init
-        ./configure --prefix=/usr/local/wxWidgets --enable-webview --enable-compat30 --disable-shared
+        set -euo pipefail
+        mkdir -p ~/projects && cd ~/projects
+        git config --global http.lowSpeedLimit 500
+        git config --global http.lowSpeedTime 120
+        git config --global http.postBuffer 524288000
+        for attempt in 1 2 3 4 5; do
+          rm -rf wxWidgets
+          if git clone --depth 1 --branch ${{ env.WXWIDGETS_VERSION }} ${{ env.WXWIDGETS_REPO }} wxWidgets; then
+            break
+          fi
+          echo "git clone wxWidgets failed (attempt $attempt), retrying..." >&2
+          if [ "$attempt" -eq 5 ]; then
+            echo "git clone wxWidgets failed after 5 attempts" >&2
+            exit 1
+          fi
+          sleep $((attempt * 25))
+        done
+        cd wxWidgets
+        git submodule update --init --depth 1
+        LIBPNG_PREFIX="$(brew --prefix libpng)"
+        LIBTIFF_PREFIX="$(brew --prefix libtiff)"
+        export CPPFLAGS="-I${LIBPNG_PREFIX}/include -I${LIBTIFF_PREFIX}/include ${CPPFLAGS:-}"
+        export LDFLAGS="-L${LIBPNG_PREFIX}/lib -L${LIBTIFF_PREFIX}/lib ${LDFLAGS:-}"
+        export PKG_CONFIG_PATH="${LIBPNG_PREFIX}/lib/pkgconfig:${LIBTIFF_PREFIX}/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
+        # Bundled libpng can hit fp.h issues on recent Xcode; use Homebrew libpng/libtiff (keg-only paths above).
+        ./configure --prefix=/usr/local/wxWidgets --enable-webview --enable-compat30 --disable-shared \
+          --with-libpng=sys --with-libtiff=sys
         make -j8
 
     - name: "Installing Erlang"
       if: steps.macos-cache.outputs.cache-hit != 'true'
       run: |
-        git clone https://github.com/asdf-vm/asdf.git ~/.asdf
-        . $HOME/.asdf/asdf.sh
+        set -euo pipefail
+        export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
         asdf plugin add erlang
         asdf plugin add elixir
         asdf plugin add nodejs
-        echo "erlang ref:${{ env.OTP_VERSION }}" >> .tool-versions
-        echo "elixir ${{ env.ELIXIR_VERSION }}${{ env.ELIXIR_VARIANT }}" >> .tool-versions
-        echo "nodejs v18.7.0" >> .tool-versions
-        export KERL_CONFIGURE_OPTIONS="--enable-parallel-configure --with-wxdir=`echo ~/projects/wxWidgets` --disable-jit --without-javac --disable-debug CXX='gcc -std=c++11'"
+        echo "erlang ref:${{ env.OTP_VERSION }}" >> ~/.tool-versions
+        echo "elixir ${{ env.ELIXIR_VERSION }}${{ env.ELIXIR_VARIANT }}" >> ~/.tool-versions
+        echo "nodejs v18.7.0" >> ~/.tool-versions
+        # Do not use CXX='gcc -std=c++11' — kerl splits that into CXX=gcc plus a stray -std=c++11 configure arg.
+        export KERL_CONFIGURE_OPTIONS="--enable-parallel-configure --with-wxdir=$HOME/projects/wxWidgets --disable-jit --without-javac --disable-debug CXX=clang++"
         asdf install
 
     - uses: actions/checkout@v1
     - name: "Compile and Lint"
       run: |
-        . $HOME/.asdf/asdf.sh
+        set -euo pipefail
+        export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
         echo "erlang ref:${{ env.OTP_VERSION }}" > .tool-versions
         echo "elixir ${{ env.ELIXIR_VERSION }}${{ env.ELIXIR_VARIANT }}" >> .tool-versions
         echo "nodejs v18.7.0" >> .tool-versions
@@ -216,10 +992,11 @@ jobs:
         cd assets && npm install
 
     - name: "Build Release"
-      env:
-        MACOS_PEM: ${{ secrets.MACOS_PEM }}
       run: |
-        . $HOME/.asdf/asdf.sh
+        set -euo pipefail
+        export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
+        # Do not set MACOS_PEM here: if the secret is set but not a valid Developer ID PEM,
+        # create_keychain maybe still runs the full path and fails import (CI cannot code-sign).
         mix desktop.create_keychain maybe
         export MACOS_KEYCHAIN="$HOME/Library/Keychains/macos-build.keychain"
         export LD_LIBRARY_PATH="$HOME/projects/wxWidgets/lib/"
