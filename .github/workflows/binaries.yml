@@ -879,9 +879,15 @@ jobs:
     # If WIN32_KEY_PASS is set to "" (missing secret), desktop_deployment still
     # attempts signing and osslsigncode misparses -pass, breaking -n "The ...".
     # Only export the variable when the secret is non-empty so CI skips signing.
+    # Note: secrets context is not available in `if:` conditionals, so the
+    # check is done inside the shell instead.
     - name: Export WIN32_KEY_PASS for code signing (optional)
-      if: ${{ secrets.WIN32_KEY_PASS != '' }}
-      run: echo "WIN32_KEY_PASS=${{ secrets.WIN32_KEY_PASS }}" >> "$GITHUB_ENV"
+      env:
+        WIN32_KEY_PASS: ${{ secrets.WIN32_KEY_PASS }}
+      run: |
+        if [ -n "$WIN32_KEY_PASS" ]; then
+          echo "WIN32_KEY_PASS=$WIN32_KEY_PASS" >> "$GITHUB_ENV"
+        fi
 
     - name: "Build Release"
       env:
